@@ -164,7 +164,9 @@ router.post('/', async (req, res) => {
       harga_bbm: harga_bbm || 10000,
       biaya_tol: biaya_tol || 0,
       biaya_makan: biaya_makan || 0,
-      nilai_tagihan: nilai_tagihan || 0
+      nilai_tagihan: nilai_tagihan || 0,
+      lat: req.body.lat,
+      lng: req.body.lng
     });
 
     res.status(201).json({
