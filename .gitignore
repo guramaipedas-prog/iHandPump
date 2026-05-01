@@ -1,0 +1,33 @@
+# SDKs
+android_sdk/
+flutter_sdk/
+java/
+
+# Node
+backend/node_modules/
+node_modules/
+
+# Flutter
+.dart_tool/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+pubspec.lock
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Misc
+uploads/*.jpg
+uploads/*.png
+uploads/*.jpeg
