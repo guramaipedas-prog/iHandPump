@@ -648,7 +648,19 @@ class DatabaseMVP {
     return await this.getOrder(id);
   }
 
-  async getBillingStats() {
+  async getBillingStats({ month, year } = {}) {
+    let whereClause = "WHERE status = 'SELESAI'";
+    let params = [];
+    
+    if (month && year) {
+      if (this.isPostgres) {
+        whereClause += ' AND EXTRACT(MONTH FROM tanggal) = $1 AND EXTRACT(YEAR FROM tanggal) = $2';
+      } else {
+        whereClause += " AND strftime('%m', tanggal) = ? AND strftime('%Y', tanggal) = ?";
+      }
+      params = [month.toString().padStart(2, '0'), year.toString()];
+    }
+
     return await this.get(`
       SELECT 
         COUNT(*) as total_tagihan,
@@ -657,8 +669,8 @@ class DatabaseMVP {
         SUM(CASE WHEN status_tagihan = 'BELUM' THEN nilai_tagihan ELSE 0 END) as total_piutang,
         SUM(CASE WHEN status_tagihan = 'LUNAS' THEN nilai_tagihan ELSE 0 END) as total_terbayar
       FROM orders
-      WHERE status = 'SELESAI'
-    `);
+      ${whereClause}
+    `, params);
   }
 
   // ==================== UANG JALAN TEMPLATES ====================
@@ -688,7 +700,20 @@ class DatabaseMVP {
   }
 
   // ==================== STATS & DASHBOARD ====================
-  async getDashboardStats() {
+  async getDashboardStats({ month, year } = {}) {
+    // Build WHERE clause for month/year filter
+    let whereClause = '';
+    let params = [];
+    
+    if (month && year) {
+      if (this.isPostgres) {
+        whereClause = 'WHERE EXTRACT(MONTH FROM tanggal) = $1 AND EXTRACT(YEAR FROM tanggal) = $2';
+      } else {
+        whereClause = 'WHERE strftime(\'%m\', tanggal) = ? AND strftime(\'%Y\', tanggal) = ?';
+      }
+      params = [month.toString().padStart(2, '0'), year.toString()];
+    }
+
     const orderStats = await this.get(`
       SELECT 
         COUNT(*) as total_orders,
@@ -699,21 +724,33 @@ class DatabaseMVP {
         SUM(CASE WHEN status = 'BONGKAR' THEN 1 ELSE 0 END) as bongkar,
         SUM(CASE WHEN status = 'SELESAI' THEN 1 ELSE 0 END) as selesai
       FROM orders
-    `);
+      ${whereClause}
+    `, params);
 
-    const billingStats = await this.getBillingStats();
+    const billingStats = await this.getBillingStats({ month, year });
 
-    // PostgreSQL vs SQLite date syntax
+    // Today orders (always current date, not filtered by month)
     const todayDateSql = this.isPostgres
       ? `SELECT COUNT(*) as count FROM orders WHERE tanggal::date = CURRENT_DATE`
       : `SELECT COUNT(*) as count FROM orders WHERE date(tanggal) = date('now')`;
     const todayOrders = await this.get(todayDateSql);
 
+    // Active drivers (filtered by month if specified)
+    let activeDriverWhere = "WHERE status IN ('DIJADWALKAN', 'MUAT', 'JALAN', 'BONGKAR')";
+    let activeDriverParams = [];
+    if (month && year) {
+      if (this.isPostgres) {
+        activeDriverWhere += ' AND EXTRACT(MONTH FROM tanggal) = $1 AND EXTRACT(YEAR FROM tanggal) = $2';
+      } else {
+        activeDriverWhere += " AND strftime('%m', tanggal) = ? AND strftime('%Y', tanggal) = ?";
+      }
+      activeDriverParams = params;
+    }
     const activeDrivers = await this.get(`
       SELECT COUNT(DISTINCT driver_id) as count 
       FROM orders 
-      WHERE status IN ('DIJADWALKAN', 'MUAT', 'JALAN', 'BONGKAR')
-    `);
+      ${activeDriverWhere}
+    `, activeDriverParams);
 
     return {
       orders: orderStats,

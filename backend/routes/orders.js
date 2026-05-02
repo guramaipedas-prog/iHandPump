@@ -66,10 +66,11 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/orders/stats/dashboard - Get statistik dashboard
+// GET /api/orders/stats/dashboard - Get statistik dashboard (with month/year filter)
 router.get('/stats/dashboard', async (req, res) => {
   try {
-    const stats = await db.getDashboardStats();
+    const { month, year } = req.query;
+    const stats = await db.getDashboardStats({ month: month ? parseInt(month) : null, year: year ? parseInt(year) : null });
     res.json({
       success: true,
       data: stats
