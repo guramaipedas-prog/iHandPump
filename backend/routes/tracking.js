@@ -68,7 +68,7 @@ router.get('/:resi', async (req, res) => {
           asal: order.titik_a,
           tujuan: order.titik_b,
           armada: null,
-          nopol: null,
+          nopol: order.nopol_truck || '-',
           driver: order.driver_nama || '-',
           status: order.status.toLowerCase(),
           lokasi: order.lokasi_terakhir || order.titik_a,

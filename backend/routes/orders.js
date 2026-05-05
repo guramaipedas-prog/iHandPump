@@ -148,7 +148,7 @@ router.post('/', async (req, res) => {
     const {
       id, customer_id, customer_nama, titik_a, titik_b, jenis_barang,
       driver_id, driver_nama, jarak_km, konsumsi_bbm, harga_bbm,
-      biaya_tol, biaya_makan, nilai_tagihan
+      biaya_tol, biaya_makan, nilai_tagihan, nopol_truck
     } = req.body;
 
     // Validasi required fields
@@ -186,7 +186,8 @@ router.post('/', async (req, res) => {
       lat_a: req.body.lat_a,
       lng_a: req.body.lng_a,
       lat: req.body.lat,
-      lng: req.body.lng
+      lng: req.body.lng,
+      nopol_truck
     });
 
     res.status(201).json({

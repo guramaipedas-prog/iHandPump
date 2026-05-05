@@ -212,6 +212,7 @@ class DatabaseMVP {
           lng_a REAL DEFAULT 112.7521,
           lat REAL DEFAULT -7.2575,
           lng REAL DEFAULT 112.7521,
+          nopol_truck VARCHAR(20),
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -220,6 +221,7 @@ class DatabaseMVP {
       // Migration: add lat_a & lng_a if table already existed without them
       await client.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS lat_a REAL DEFAULT -7.2575`);
       await client.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS lng_a REAL DEFAULT 112.7521`);
+      await client.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS nopol_truck VARCHAR(20)`);
 
       // Driver logs table
       await client.query(`
@@ -342,6 +344,11 @@ class DatabaseMVP {
     }
     try {
       await this.runSQLite(`ALTER TABLE orders ADD COLUMN lng_a REAL DEFAULT 112.7521`);
+    } catch (e) {
+      // Column may already exist, ignore
+    }
+    try {
+      await this.runSQLite(`ALTER TABLE orders ADD COLUMN nopol_truck TEXT`);
     } catch (e) {
       // Column may already exist, ignore
     }
@@ -490,7 +497,7 @@ class DatabaseMVP {
   async createOrder({
     id, customer_id, customer_nama, titik_a, titik_b, jenis_barang,
     driver_id, driver_nama, jarak_km, konsumsi_bbm, harga_bbm,
-    biaya_tol, biaya_makan, nilai_tagihan, lat_a, lng_a, lat, lng
+    biaya_tol, biaya_makan, nilai_tagihan, lat_a, lng_a, lat, lng, nopol_truck
   }) {
     const bbmNeeded = jarak_km / (konsumsi_bbm || 5);
     const totalUangJalan = (bbmNeeded * (harga_bbm || 10000)) + (biaya_tol || 0) + (biaya_makan || 0);
@@ -500,14 +507,14 @@ class DatabaseMVP {
         id, customer_id, customer_nama, titik_a, titik_b, jenis_barang,
         driver_id, driver_nama, status, jarak_km, konsumsi_bbm, harga_bbm,
         biaya_tol, biaya_makan, total_uang_jalan, nilai_tagihan,
-        lat_a, lng_a, lat, lng, lokasi_terakhir
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        lat_a, lng_a, lat, lng, lokasi_terakhir, nopol_truck
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       id.toUpperCase(), customer_id, customer_nama, titik_a, titik_b, jenis_barang,
       driver_id, driver_nama, driver_id ? 'DIJADWALKAN' : 'MENUNGGU',
       jarak_km, konsumsi_bbm, harga_bbm, biaya_tol, biaya_makan,
       totalUangJalan, nilai_tagihan,
-      lat_a ?? -7.2575, lng_a ?? 112.7521, lat ?? -7.2575, lng ?? 112.7521, titik_b
+      lat_a ?? -7.2575, lng_a ?? 112.7521, lat ?? -7.2575, lng ?? 112.7521, titik_b, nopol_truck
     ]);
 
     await this.run(
