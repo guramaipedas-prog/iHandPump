@@ -208,12 +208,18 @@ class DatabaseMVP {
           status_tagihan VARCHAR(20) DEFAULT 'BELUM' CHECK (status_tagihan IN ('BELUM', 'LUNAS')),
           tanggal_lunas TIMESTAMP,
           lokasi_terakhir VARCHAR(255),
+          lat_a REAL DEFAULT -7.2575,
+          lng_a REAL DEFAULT 112.7521,
           lat REAL DEFAULT -7.2575,
           lng REAL DEFAULT 112.7521,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
+
+      // Migration: add lat_a & lng_a if table already existed without them
+      await client.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS lat_a REAL DEFAULT -7.2575`);
+      await client.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS lng_a REAL DEFAULT 112.7521`);
 
       // Driver logs table
       await client.query(`
@@ -326,6 +332,18 @@ class DatabaseMVP {
         });
       });
       console.log('✅ MVP SQLite tables initialized');
+    }
+
+    // Migration: add lat_a & lng_a if table already existed without them
+    try {
+      await this.runSQLite(`ALTER TABLE orders ADD COLUMN lat_a REAL DEFAULT -7.2575`);
+    } catch (e) {
+      // Column may already exist, ignore
+    }
+    try {
+      await this.runSQLite(`ALTER TABLE orders ADD COLUMN lng_a REAL DEFAULT 112.7521`);
+    } catch (e) {
+      // Column may already exist, ignore
     }
   }
 
@@ -472,7 +490,7 @@ class DatabaseMVP {
   async createOrder({
     id, customer_id, customer_nama, titik_a, titik_b, jenis_barang,
     driver_id, driver_nama, jarak_km, konsumsi_bbm, harga_bbm,
-    biaya_tol, biaya_makan, nilai_tagihan
+    biaya_tol, biaya_makan, nilai_tagihan, lat_a, lng_a, lat, lng
   }) {
     const bbmNeeded = jarak_km / (konsumsi_bbm || 5);
     const totalUangJalan = (bbmNeeded * (harga_bbm || 10000)) + (biaya_tol || 0) + (biaya_makan || 0);
@@ -481,13 +499,15 @@ class DatabaseMVP {
       INSERT INTO orders (
         id, customer_id, customer_nama, titik_a, titik_b, jenis_barang,
         driver_id, driver_nama, status, jarak_km, konsumsi_bbm, harga_bbm,
-        biaya_tol, biaya_makan, total_uang_jalan, nilai_tagihan
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        biaya_tol, biaya_makan, total_uang_jalan, nilai_tagihan,
+        lat_a, lng_a, lat, lng, lokasi_terakhir
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       id.toUpperCase(), customer_id, customer_nama, titik_a, titik_b, jenis_barang,
       driver_id, driver_nama, driver_id ? 'DIJADWALKAN' : 'MENUNGGU',
       jarak_km, konsumsi_bbm, harga_bbm, biaya_tol, biaya_makan,
-      totalUangJalan, nilai_tagihan
+      totalUangJalan, nilai_tagihan,
+      lat_a ?? -7.2575, lng_a ?? 112.7521, lat ?? -7.2575, lng ?? 112.7521, titik_b
     ]);
 
     await this.run(
@@ -646,7 +666,19 @@ class DatabaseMVP {
     return await this.getOrder(id);
   }
 
-  async getBillingStats() {
+  async getBillingStats({ month, year } = {}) {
+    let whereClause = "WHERE status = 'SELESAI'";
+    let params = [];
+    
+    if (month && year) {
+      if (this.isPostgres) {
+        whereClause += ' AND EXTRACT(MONTH FROM tanggal) = $1 AND EXTRACT(YEAR FROM tanggal) = $2';
+      } else {
+        whereClause += " AND strftime('%m', tanggal) = ? AND strftime('%Y', tanggal) = ?";
+      }
+      params = [month.toString().padStart(2, '0'), year.toString()];
+    }
+
     return await this.get(`
       SELECT 
         COUNT(*) as total_tagihan,
@@ -655,8 +687,8 @@ class DatabaseMVP {
         SUM(CASE WHEN status_tagihan = 'BELUM' THEN nilai_tagihan ELSE 0 END) as total_piutang,
         SUM(CASE WHEN status_tagihan = 'LUNAS' THEN nilai_tagihan ELSE 0 END) as total_terbayar
       FROM orders
-      WHERE status = 'SELESAI'
-    `);
+      ${whereClause}
+    `, params);
   }
 
   // ==================== UANG JALAN TEMPLATES ====================
@@ -686,7 +718,20 @@ class DatabaseMVP {
   }
 
   // ==================== STATS & DASHBOARD ====================
-  async getDashboardStats() {
+  async getDashboardStats({ month, year } = {}) {
+    // Build WHERE clause for month/year filter
+    let whereClause = '';
+    let params = [];
+    
+    if (month && year) {
+      if (this.isPostgres) {
+        whereClause = 'WHERE EXTRACT(MONTH FROM tanggal) = $1 AND EXTRACT(YEAR FROM tanggal) = $2';
+      } else {
+        whereClause = 'WHERE strftime(\'%m\', tanggal) = ? AND strftime(\'%Y\', tanggal) = ?';
+      }
+      params = [month.toString().padStart(2, '0'), year.toString()];
+    }
+
     const orderStats = await this.get(`
       SELECT 
         COUNT(*) as total_orders,
@@ -697,21 +742,33 @@ class DatabaseMVP {
         SUM(CASE WHEN status = 'BONGKAR' THEN 1 ELSE 0 END) as bongkar,
         SUM(CASE WHEN status = 'SELESAI' THEN 1 ELSE 0 END) as selesai
       FROM orders
-    `);
+      ${whereClause}
+    `, params);
 
-    const billingStats = await this.getBillingStats();
+    const billingStats = await this.getBillingStats({ month, year });
 
-    // PostgreSQL vs SQLite date syntax
+    // Today orders (always current date, not filtered by month)
     const todayDateSql = this.isPostgres
       ? `SELECT COUNT(*) as count FROM orders WHERE tanggal::date = CURRENT_DATE`
       : `SELECT COUNT(*) as count FROM orders WHERE date(tanggal) = date('now')`;
     const todayOrders = await this.get(todayDateSql);
 
+    // Active drivers (filtered by month if specified)
+    let activeDriverWhere = "WHERE status IN ('DIJADWALKAN', 'MUAT', 'JALAN', 'BONGKAR')";
+    let activeDriverParams = [];
+    if (month && year) {
+      if (this.isPostgres) {
+        activeDriverWhere += ' AND EXTRACT(MONTH FROM tanggal) = $1 AND EXTRACT(YEAR FROM tanggal) = $2';
+      } else {
+        activeDriverWhere += " AND strftime('%m', tanggal) = ? AND strftime('%Y', tanggal) = ?";
+      }
+      activeDriverParams = params;
+    }
     const activeDrivers = await this.get(`
       SELECT COUNT(DISTINCT driver_id) as count 
       FROM orders 
-      WHERE status IN ('DIJADWALKAN', 'MUAT', 'JALAN', 'BONGKAR')
-    `);
+      ${activeDriverWhere}
+    `, activeDriverParams);
 
     return {
       orders: orderStats,
@@ -719,6 +776,28 @@ class DatabaseMVP {
       today_orders: todayOrders?.count || 0,
       active_drivers: activeDrivers?.count || 0
     };
+  }
+
+  async getAvailablePeriods() {
+    if (this.isPostgres) {
+      return await this.query(`
+        SELECT 
+          EXTRACT(MONTH FROM tanggal)::int as month,
+          EXTRACT(YEAR FROM tanggal)::int as year
+        FROM orders
+        GROUP BY EXTRACT(MONTH FROM tanggal), EXTRACT(YEAR FROM tanggal)
+        ORDER BY year DESC, month DESC
+      `);
+    } else {
+      return await this.query(`
+        SELECT 
+          CAST(strftime('%m', tanggal) AS INTEGER) as month,
+          CAST(strftime('%Y', tanggal) AS INTEGER) as year
+        FROM orders
+        GROUP BY strftime('%m', tanggal), strftime('%Y', tanggal)
+        ORDER BY year DESC, month DESC
+      `);
+    }
   }
 
   async getRecentOrders(limit = 10) {

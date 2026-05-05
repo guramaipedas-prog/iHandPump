@@ -66,10 +66,11 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/orders/stats/dashboard - Get statistik dashboard
+// GET /api/orders/stats/dashboard - Get statistik dashboard (with month/year filter)
 router.get('/stats/dashboard', async (req, res) => {
   try {
-    const stats = await db.getDashboardStats();
+    const { month, year } = req.query;
+    const stats = await db.getDashboardStats({ month: month ? parseInt(month) : null, year: year ? parseInt(year) : null });
     res.json({
       success: true,
       data: stats
@@ -79,6 +80,23 @@ router.get('/stats/dashboard', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Gagal mengambil statistik'
+    });
+  }
+});
+
+// GET /api/orders/available-periods - Get list of months/years that have data
+router.get('/available-periods', async (req, res) => {
+  try {
+    const periods = await db.getAvailablePeriods();
+    res.json({
+      success: true,
+      data: periods
+    });
+  } catch (error) {
+    console.error('Error fetching periods:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Gagal mengambil periode'
     });
   }
 });
@@ -164,7 +182,11 @@ router.post('/', async (req, res) => {
       harga_bbm: harga_bbm || 10000,
       biaya_tol: biaya_tol || 0,
       biaya_makan: biaya_makan || 0,
-      nilai_tagihan: nilai_tagihan || 0
+      nilai_tagihan: nilai_tagihan || 0,
+      lat_a: req.body.lat_a,
+      lng_a: req.body.lng_a,
+      lat: req.body.lat,
+      lng: req.body.lng
     });
 
     res.status(201).json({
@@ -176,7 +198,7 @@ router.post('/', async (req, res) => {
     console.error('Error creating order:', error);
     res.status(500).json({
       success: false,
-      error: 'Gagal membuat order'
+      error: `Gagal membuat order: ${error.message || 'Unknown error'}`
     });
   }
 });

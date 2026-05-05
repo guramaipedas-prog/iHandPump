@@ -66,6 +66,8 @@ CREATE TABLE IF NOT EXISTS orders (
     
     -- Tracking
     lokasi_terakhir TEXT,
+    lat_a REAL DEFAULT -7.2575,
+    lng_a REAL DEFAULT 112.7521,
     lat REAL DEFAULT -7.2575,
     lng REAL DEFAULT 112.7521,
     
