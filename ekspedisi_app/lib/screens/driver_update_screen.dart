@@ -77,7 +77,12 @@ class _DriverUpdateScreenState extends State<DriverUpdateScreen> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.camera, imageQuality: 70);
+    final picked = await picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 50,
+      maxWidth: 1024,
+      maxHeight: 1024,
+    );
     if (picked != null) {
       setState(() => _selectedImage = File(picked.path));
     }
