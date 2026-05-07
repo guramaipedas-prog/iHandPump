@@ -686,50 +686,62 @@ class _DriverLogImage extends StatelessWidget {
 
   const _DriverLogImage({required this.fotoUrl});
 
+  Widget _errorBox() {
+    return Container(
+      height: 100,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppTheme.card,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      alignment: Alignment.center,
+      child: const Text('Gagal memuat foto', style: TextStyle(color: AppTheme.muted)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Handle base64 data URI from web form
     if (fotoUrl.startsWith('data:image')) {
       try {
         final bytes = base64Decode(fotoUrl.split(',').last);
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Image.memory(
-            bytes,
-            height: 180,
-            width: double.infinity,
-            fit: BoxFit.cover,
+        if (bytes.isEmpty) return _errorBox();
+        return Container(
+          height: 180,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            image: DecorationImage(
+              image: MemoryImage(bytes),
+              fit: BoxFit.cover,
+            ),
           ),
         );
       } catch (e) {
-        return Container(
-          height: 100,
-          color: AppTheme.card,
-          child: const Center(child: Text('Gagal memuat foto', style: TextStyle(color: AppTheme.muted))),
-        );
+        return _errorBox();
       }
     }
 
     // Regular network URL
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: Image.network(
-        fotoUrl,
-        height: 180,
-        width: double.infinity,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            height: 180,
-            color: AppTheme.card,
-            child: const Center(child: CircularProgressIndicator(color: AppTheme.primary, strokeWidth: 2)),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) => Container(
-          height: 100,
-          color: AppTheme.card,
-          child: const Center(child: Text('Gagal memuat foto', style: TextStyle(color: AppTheme.muted))),
+    return Container(
+      height: 180,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Image.network(
+          fotoUrl,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Container(
+              color: AppTheme.card,
+              child: const Center(child: CircularProgressIndicator(color: AppTheme.primary, strokeWidth: 2)),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) => _errorBox(),
         ),
       ),
     );
