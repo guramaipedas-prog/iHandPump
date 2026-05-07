@@ -473,9 +473,11 @@ class DatabaseMVP {
       SELECT o.*, 
         c.nama as customer_nama_display,
         c.telepon as customer_telepon,
-        c.alamat as customer_alamat
+        c.alamat as customer_alamat,
+        COALESCE(o.nopol_truck, d.nopol_truck) as nopol_truck_display
       FROM orders o
       LEFT JOIN customers c ON o.customer_id = c.id
+      LEFT JOIN drivers d ON o.driver_id = d.id
       WHERE o.id = ?
     `, [id]);
     
@@ -572,9 +574,12 @@ class DatabaseMVP {
   }
 
   async assignDriver(id, driverId, driverNama) {
+    const driver = await this.getDriver(driverId);
+    const nopol = driver?.nopol_truck || '';
+
     await this.run(
-      'UPDATE orders SET driver_id = ?, driver_nama = ?, status = ? WHERE id = ?',
-      [driverId, driverNama, 'DIJADWALKAN', id]
+      'UPDATE orders SET driver_id = ?, driver_nama = ?, nopol_truck = ?, status = ? WHERE id = ?',
+      [driverId, driverNama, nopol, 'DIJADWALKAN', id]
     );
 
     await this.run(

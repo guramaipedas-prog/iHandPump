@@ -81,7 +81,7 @@ class Order {
       lokasiTerakhir: json['lokasi_terakhir'],
       lat: json['lat'] != null ? (json['lat'] as num).toDouble() : null,
       lng: json['lng'] != null ? (json['lng'] as num).toDouble() : null,
-      nopolTruck: json['nopol_truck'] ?? json['nopol'],
+      nopolTruck: json['nopol_truck'] ?? json['nopol_truck_display'] ?? json['nopol'],
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
       history: json['history'] != null

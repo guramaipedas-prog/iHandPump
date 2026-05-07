@@ -641,6 +641,41 @@ class _DriverLogCard extends StatelessWidget {
     return DateFormat('d MMM yyyy, HH:mm', 'id_ID').format(date);
   }
 
+  void _showPhotoDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(16),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            color: AppTheme.card,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppBar(
+                  backgroundColor: AppTheme.dark,
+                  automaticallyImplyLeading: false,
+                  title: const Text('Foto Update Sopir', style: TextStyle(fontSize: 16)),
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                Flexible(
+                  child: _FullScreenPhoto(fotoUrl: log.fotoUrl!),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -661,10 +696,16 @@ class _DriverLogCard extends StatelessWidget {
                 children: [
                   StatusBadge(status: log.statusUpdate),
                   const SizedBox(width: 8),
-                  Text(log.driverNama, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  Text(
+                    log.driverNama.isEmpty ? 'Sopir' : log.driverNama,
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
                 ],
               ),
-              Text(_formatDateTime(log.createdAt), style: const TextStyle(fontSize: 11, color: AppTheme.muted)),
+              Text(
+                _formatDateTime(log.createdAt),
+                style: const TextStyle(fontSize: 11, color: AppTheme.muted),
+              ),
             ],
           ),
           if (log.catatan != null && log.catatan!.isNotEmpty) ...[
@@ -673,7 +714,19 @@ class _DriverLogCard extends StatelessWidget {
           ],
           if (log.fotoUrl != null && log.fotoUrl!.isNotEmpty) ...[
             const SizedBox(height: 10),
-            _DriverLogImage(fotoUrl: log.fotoUrl!),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _showPhotoDialog(context),
+                icon: const Icon(Icons.image, size: 18),
+                label: const Text('Lihat Foto'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.primary,
+                  side: const BorderSide(color: AppTheme.border),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
           ],
         ],
       ),
@@ -681,68 +734,45 @@ class _DriverLogCard extends StatelessWidget {
   }
 }
 
-class _DriverLogImage extends StatelessWidget {
+class _FullScreenPhoto extends StatelessWidget {
   final String fotoUrl;
 
-  const _DriverLogImage({required this.fotoUrl});
-
-  Widget _errorBox() {
-    return Container(
-      height: 100,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppTheme.card,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      alignment: Alignment.center,
-      child: const Text('Gagal memuat foto', style: TextStyle(color: AppTheme.muted)),
-    );
-  }
+  const _FullScreenPhoto({required this.fotoUrl});
 
   @override
   Widget build(BuildContext context) {
-    // Handle base64 data URI from web form
+    // Base64 data URI
     if (fotoUrl.startsWith('data:image')) {
       try {
         final bytes = base64Decode(fotoUrl.split(',').last);
-        if (bytes.isEmpty) return _errorBox();
-        return Container(
-          height: 180,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            image: DecorationImage(
-              image: MemoryImage(bytes),
-              fit: BoxFit.cover,
-            ),
-          ),
+        return InteractiveViewer(
+          child: Image.memory(bytes, fit: BoxFit.contain),
         );
       } catch (e) {
-        return _errorBox();
+        return _errorView();
       }
     }
 
-    // Regular network URL
-    return Container(
-      height: 180,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
+    // Network URL
+    return InteractiveViewer(
+      child: Image.network(
+        fotoUrl,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => _errorView(),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child: Image.network(
-          fotoUrl,
-          fit: BoxFit.cover,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container(
-              color: AppTheme.card,
-              child: const Center(child: CircularProgressIndicator(color: AppTheme.primary, strokeWidth: 2)),
-            );
-          },
-          errorBuilder: (context, error, stackTrace) => _errorBox(),
-        ),
+    );
+  }
+
+  Widget _errorView() {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      child: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.broken_image, size: 48, color: AppTheme.muted),
+          SizedBox(height: 12),
+          Text('Gagal memuat foto', style: TextStyle(color: AppTheme.muted)),
+        ],
       ),
     );
   }
