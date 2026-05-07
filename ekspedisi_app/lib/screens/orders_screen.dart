@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -672,22 +673,64 @@ class _DriverLogCard extends StatelessWidget {
           ],
           if (log.fotoUrl != null && log.fotoUrl!.isNotEmpty) ...[
             const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                log.fotoUrl!,
-                height: 180,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  height: 100,
-                  color: AppTheme.card,
-                  child: const Center(child: Text('Gagal memuat foto', style: TextStyle(color: AppTheme.muted))),
-                ),
-              ),
-            ),
+            _DriverLogImage(fotoUrl: log.fotoUrl!),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _DriverLogImage extends StatelessWidget {
+  final String fotoUrl;
+
+  const _DriverLogImage({required this.fotoUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    // Handle base64 data URI from web form
+    if (fotoUrl.startsWith('data:image')) {
+      try {
+        final bytes = base64Decode(fotoUrl.split(',').last);
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Image.memory(
+            bytes,
+            height: 180,
+            width: double.infinity,
+            fit: BoxFit.cover,
+          ),
+        );
+      } catch (e) {
+        return Container(
+          height: 100,
+          color: AppTheme.card,
+          child: const Center(child: Text('Gagal memuat foto', style: TextStyle(color: AppTheme.muted))),
+        );
+      }
+    }
+
+    // Regular network URL
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: Image.network(
+        fotoUrl,
+        height: 180,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            height: 180,
+            color: AppTheme.card,
+            child: const Center(child: CircularProgressIndicator(color: AppTheme.primary, strokeWidth: 2)),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) => Container(
+          height: 100,
+          color: AppTheme.card,
+          child: const Center(child: Text('Gagal memuat foto', style: TextStyle(color: AppTheme.muted))),
+        ),
       ),
     );
   }

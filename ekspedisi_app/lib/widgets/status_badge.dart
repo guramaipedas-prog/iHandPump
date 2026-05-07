@@ -23,6 +23,7 @@ class StatusBadge extends StatelessWidget {
       case 'dijadwalkan': return AppTheme.blue;
       case 'muat': return AppTheme.purple;
       case 'jalan': return AppTheme.yellow;
+      case 'sampai': return AppTheme.primaryLight;
       case 'bongkar': return AppTheme.primary;
       case 'selesai': return AppTheme.green;
       case 'belum': return AppTheme.red;
