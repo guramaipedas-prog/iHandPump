@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -98,6 +99,15 @@ class _DriverUpdateScreenState extends State<DriverUpdateScreen> {
 
     try {
       String fotoUrl = '';
+      if (_selectedImage != null) {
+        try {
+          final bytes = await _selectedImage!.readAsBytes();
+          final base64String = base64Encode(bytes);
+          fotoUrl = 'data:image/jpeg;base64,$base64String';
+        } catch (e) {
+          debugPrint('Gagal encode foto: $e');
+        }
+      }
 
       await context.read<AppProvider>().submitDriverLog({
         'order_id': orderId.toUpperCase(),

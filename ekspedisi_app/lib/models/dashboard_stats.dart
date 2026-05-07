@@ -15,8 +15,8 @@ class DashboardStats {
     return DashboardStats(
       orders: OrderStats.fromJson(json['orders'] ?? {}),
       billing: json['billing'] != null ? BillingStats.fromJson(json['billing']) : null,
-      todayOrders: json['today_orders'],
-      activeDrivers: json['active_drivers'],
+      todayOrders: json['today_orders'] != null ? int.tryParse(json['today_orders'].toString()) : null,
+      activeDrivers: json['active_drivers'] != null ? int.tryParse(json['active_drivers'].toString()) : null,
     );
   }
 }
@@ -42,13 +42,13 @@ class OrderStats {
 
   factory OrderStats.fromJson(Map<String, dynamic> json) {
     return OrderStats(
-      totalOrders: json['total_orders'] ?? json['count'],
-      menunggu: json['menunggu'],
-      dijadwalkan: json['dijadwalkan'],
-      muat: json['muat'],
-      jalan: json['jalan'],
-      bongkar: json['bongkar'],
-      selesai: json['selesai'],
+      totalOrders: json['total_orders'] != null ? int.tryParse(json['total_orders'].toString()) : json['count'] != null ? int.tryParse(json['count'].toString()) : null,
+      menunggu: json['menunggu'] != null ? int.tryParse(json['menunggu'].toString()) : null,
+      dijadwalkan: json['dijadwalkan'] != null ? int.tryParse(json['dijadwalkan'].toString()) : null,
+      muat: json['muat'] != null ? int.tryParse(json['muat'].toString()) : null,
+      jalan: json['jalan'] != null ? int.tryParse(json['jalan'].toString()) : null,
+      bongkar: json['bongkar'] != null ? int.tryParse(json['bongkar'].toString()) : null,
+      selesai: json['selesai'] != null ? int.tryParse(json['selesai'].toString()) : null,
     );
   }
 }
@@ -70,11 +70,11 @@ class BillingStats {
 
   factory BillingStats.fromJson(Map<String, dynamic> json) {
     return BillingStats(
-      totalTagihan: json['total_tagihan'] != null ? (json['total_tagihan'] as num).toInt() : null,
-      belumLunas: json['belum_lunas'] != null ? (json['belum_lunas'] as num).toInt() : null,
-      sudahLunas: json['sudah_lunas'] != null ? (json['sudah_lunas'] as num).toInt() : null,
-      totalPiutang: json['total_piutang'] != null ? (json['total_piutang'] as num).toDouble() : null,
-      totalTerbayar: json['total_terbayar'] != null ? (json['total_terbayar'] as num).toDouble() : null,
+      totalTagihan: json['total_tagihan'] != null ? int.tryParse(json['total_tagihan'].toString()) : null,
+      belumLunas: json['belum_lunas'] != null ? int.tryParse(json['belum_lunas'].toString()) : null,
+      sudahLunas: json['sudah_lunas'] != null ? int.tryParse(json['sudah_lunas'].toString()) : null,
+      totalPiutang: json['total_piutang'] != null ? double.tryParse(json['total_piutang'].toString()) : null,
+      totalTerbayar: json['total_terbayar'] != null ? double.tryParse(json['total_terbayar'].toString()) : null,
     );
   }
 }
