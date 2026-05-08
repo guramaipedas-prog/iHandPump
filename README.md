@@ -188,6 +188,22 @@ Sopir update status perjalanan dan upload foto bukti pengiriman.
 
 ---
 
+## 🎬 Demo Video
+
+Klik thumbnail di bawah untuk menonton simulasi lengkap aplikasi TrukJatim (2 menit):
+
+<p align="center">
+  <a href="https://youtube.com/shorts/QXYaPUxnELk?feature=share" target="_blank">
+    <img src="https://img.youtube.com/vi/QXYaPUxnELk/0.jpg" width="360" alt="TrukJatim Demo Video" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://youtube.com/shorts/QXYaPUxnELk?feature=share">▶️ Tonton di YouTube</a>
+</p>
+
+---
+
 ## 📡 API Endpoints (Contoh)
 
 ```
