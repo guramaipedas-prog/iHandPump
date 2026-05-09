@@ -120,6 +120,7 @@ app.get('/api', (req, res) => {
 
 // Serve static files (frontend) - selalu aktif
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '..')));
 
 // Serve tracking_online.html sebagai default di root
 app.get('/', (req, res) => {

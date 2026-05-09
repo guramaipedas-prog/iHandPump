@@ -1021,9 +1021,9 @@ tr:hover td {
 
 <script>
 // API Config
-const API_URL = (window.location.protocol === 'file:' || !window.location.hostname || window.location.hostname === 'localhost')
-  ? 'https://ihandpump-production.up.railway.app/api'
-  : '/api';
+const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:3000/api'
+  : 'https://ihandpump-production.up.railway.app/api';
 
 // State
 let currentOrders = [];
