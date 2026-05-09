@@ -139,13 +139,11 @@ flutter run
 
 | Platform | File |
 |----------|------|
-| Android | [`ekspedisi-app-debug.apk`](./ekspedisi-app-debug.apk) |
-
-> **Note:** Ini adalah versi debug. Untuk production, silakan build dengan signature release.
+| Android | [app-release.apk`](.ekspedisi_app/build/app/outputs/flutter-apk/app-release.apk) |
 
 ---
 
-## 🔥 Fitur Paling "Menjual"
+## 🔥 Fitur
 
 ### 🗺️ Real-time Tracking dengan Maps
 Customer dan admin bisa melihat posisi kendaraan pengiriman secara langsung di peta. Data posisi diupdate secara berkala melalui REST API.
