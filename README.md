@@ -139,7 +139,7 @@ flutter run
 
 | Platform | File |
 |----------|------|
-| Android | [app-release.apk`](.ekspedisi_app/build/app/outputs/flutter-apk/app-release.apk) |
+| Android | [`ekspedisi-app-release.apk`](./ekspedisi-app-release.apk) |
 
 ---
 
