@@ -98,14 +98,30 @@
 
 ## 🚀 Quick Start
 
-### 1. Clone Repository
+### 👤 Untuk User (Install Aplikasi)
+
+Cukup download dan install APK, tidak perlu clone repo:
+
+1. **Download APK** dari [GitHub Releases](https://github.com/guramaipedas-prog/iHandPump/releases/tag/v1.0.0)
+2. **Install** di Android (aktifkan *Install from unknown sources* jika diminta)
+3. **Buka aplikasi** dan mulai gunakan
+
+> **Note:** Aplikasi ini membutuhkan backend server. Untuk demo lokal, backend perlu dijalankan terlebih dahulu (lihat bagian Developer di bawah).
+
+---
+
+### 🧑‍💻 Untuk Developer (Setup Project)
+
+Jika ingin develop, modifikasi, atau run project ini dari source code:
+
+#### 1. Clone Repository
 
 ```bash
 git clone https://github.com/guramaipedas-prog/iHandPump.git
 cd iHandPump
 ```
 
-### 2. Jalankan Backend
+#### 2. Jalankan Backend
 
 ```bash
 cd backend
@@ -115,12 +131,11 @@ npm install
 npm run init-db
 
 # Start server
-cd ..
 npm run dev
 ```
 Server berjalan di `http://localhost:3000`
 
-### 3. Jalankan Mobile App
+#### 3. Jalankan Mobile App (Flutter)
 
 ```bash
 cd ekspedisi_app
@@ -128,7 +143,7 @@ flutter pub get
 flutter run
 ```
 
-### 4. Buka Web Dashboard
+#### 4. Buka Web Dashboard
 
 - **Tracking Customer:** Buka `tracking_online.html` di browser
 - **Admin Dashboard:** Buka `admin.html` di browser
