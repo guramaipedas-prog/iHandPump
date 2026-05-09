@@ -10,7 +10,6 @@ import '../models/driver.dart';
 import '../data/java_cities.dart';
 import '../theme/app_theme.dart';
 import '../services/api_service.dart';
-import '../services/firebase_remote_config_service.dart';
 import '../widgets/searchable_city_dropdown.dart';
 import '../widgets/status_badge.dart';
 
@@ -341,7 +340,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
     JavaCity? selectedCityB;
     Driver? selectedDriver;
     String selectedFuelType = 'BIOSOLAR';
-    double fuelPrice = FirebaseRemoteConfigService().getHargaBioSolar();
+    double fuelPrice = 6800;
     bool isSaving = false;
 
     final fuelTypes = {
@@ -350,20 +349,25 @@ class _OrdersScreenState extends State<OrdersScreen> {
       'PERTAMAX': 'Pertamax',
     };
 
-    void updateFuelPrice(String type) {
-      final service = FirebaseRemoteConfigService();
-      switch (type) {
-        case 'BIOSOLAR':
-          fuelPrice = service.getHargaBioSolar();
-          break;
-        case 'PERTALITE':
-          fuelPrice = service.getHargaPertalite();
-          break;
-        case 'PERTAMAX':
-          fuelPrice = service.getHargaPertamax();
-          break;
+    // Ambil harga BBM terbaru dari backend
+    Future<void> loadFuelPrice() async {
+      try {
+        final price = await ApiService().getFuelPrice(selectedFuelType);
+        if (price != null && mounted) {
+          setState(() => fuelPrice = price);
+        }
+      } catch (e) {
+        // Fallback ke default
       }
     }
+
+    void updateFuelPrice(String type) async {
+      selectedFuelType = type;
+      await loadFuelPrice();
+    }
+
+    // Load harga awal
+    loadFuelPrice();
 
     showDialog(
       context: context,

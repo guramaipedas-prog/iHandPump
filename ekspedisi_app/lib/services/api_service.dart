@@ -470,4 +470,24 @@ class ApiService {
     }
     throw Exception(_parseError(response));
   }
+
+  // ==================== FUEL PRICES ====================
+  Future<double?> getFuelPrice(String jenis) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/uang-jalan/fuel-prices/$jenis'),
+        headers: headers,
+      ).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          return (data['data']['harga'] as num).toDouble();
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
 }
