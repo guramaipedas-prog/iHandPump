@@ -136,6 +136,22 @@ BEGIN
     UPDATE orders SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
 END;
 
+-- Tabel Fuel Prices (Harga BBM)
+CREATE TABLE IF NOT EXISTS fuel_prices (
+    jenis TEXT PRIMARY KEY,
+    nama TEXT NOT NULL,
+    harga REAL NOT NULL DEFAULT 0,
+    satuan TEXT DEFAULT 'liter',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert default fuel prices
+INSERT OR IGNORE INTO fuel_prices (jenis, nama, harga, satuan) VALUES 
+('BIOSOLAR', 'Pertamina Dex / Bio Solar', 6800, 'liter'),
+('PERTALITE', 'Pertalite', 10000, 'liter'),
+('PERTAMAX', 'Pertamax', 12500, 'liter'),
+('SOLAR', 'Solar Industri', 7200, 'liter');
+
 -- Trigger untuk auto-log perubahan status
 CREATE TRIGGER IF NOT EXISTS log_order_status_change
 AFTER UPDATE OF status ON orders

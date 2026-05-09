@@ -10,6 +10,7 @@ import '../models/driver.dart';
 import '../data/java_cities.dart';
 import '../theme/app_theme.dart';
 import '../services/api_service.dart';
+import '../services/firebase_remote_config_service.dart';
 import '../widgets/searchable_city_dropdown.dart';
 import '../widgets/status_badge.dart';
 
@@ -333,12 +334,36 @@ class _OrdersScreenState extends State<OrdersScreen> {
     final tolCtrl = TextEditingController();
     final makanCtrl = TextEditingController();
     final nopolCtrl = TextEditingController();
+    final konsumsiCtrl = TextEditingController(text: '5');
 
     Customer? selectedCustomer;
     JavaCity? selectedCityA;
     JavaCity? selectedCityB;
     Driver? selectedDriver;
+    String selectedFuelType = 'BIOSOLAR';
+    double fuelPrice = FirebaseRemoteConfigService().getHargaBioSolar();
     bool isSaving = false;
+
+    final fuelTypes = {
+      'BIOSOLAR': 'Bio Solar / Pertamina Dex',
+      'PERTALITE': 'Pertalite',
+      'PERTAMAX': 'Pertamax',
+    };
+
+    void updateFuelPrice(String type) {
+      final service = FirebaseRemoteConfigService();
+      switch (type) {
+        case 'BIOSOLAR':
+          fuelPrice = service.getHargaBioSolar();
+          break;
+        case 'PERTALITE':
+          fuelPrice = service.getHargaPertalite();
+          break;
+        case 'PERTAMAX':
+          fuelPrice = service.getHargaPertamax();
+          break;
+      }
+    }
 
     showDialog(
       context: context,
@@ -467,6 +492,38 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       _RupiahInputFormatter(),
                     ],
                   ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    decoration: const InputDecoration(labelText: 'Jenis BBM'),
+                    value: selectedFuelType,
+                    isExpanded: true,
+                    items: fuelTypes.entries.map((entry) {
+                      return DropdownMenuItem<String>(
+                        value: entry.key,
+                        child: Text(entry.value, overflow: TextOverflow.ellipsis),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        selectedFuelType = value!;
+                        updateFuelPrice(value);
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Harga: Rp ${NumberFormat.currency(locale: 'id_ID', symbol: '', decimalDigits: 0).format(fuelPrice)} / liter',
+                    style: const TextStyle(fontSize: 12, color: AppTheme.primary),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: konsumsiCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Konsumsi BBM (km/liter)',
+                      hintText: '5',
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
                 ],
               ),
             ),
@@ -503,6 +560,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
                             'driver_nama': selectedDriver?.nama,
                             'nopol_truck': selectedDriver?.nopolTruck,
                             'jarak_km': double.tryParse(jarakCtrl.text) ?? 0,
+                            'konsumsi_bbm': double.tryParse(konsumsiCtrl.text) ?? 5,
+                            'harga_bbm': fuelPrice,
                             'biaya_tol': double.tryParse(tolClean) ?? 0,
                             'biaya_makan': double.tryParse(makanClean) ?? 0,
                           });

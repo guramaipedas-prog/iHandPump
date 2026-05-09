@@ -357,8 +357,62 @@ curl -X PUT http://localhost:3000/api/tracking/5 \
 
 ---
 
+## ⛽ Firebase Remote Config (Harga BBM Real-time)
+
+Aplikasi ini menggunakan **Firebase Remote Config** untuk mengambil harga BBM (Bio Solar, Pertalite, Pertamax) secara real-time. Admin bisa update harga dari dashboard web, dan aplikasi Flutter otomatis mendapatkan harga terbaru.
+
+### Setup Firebase (Wajib)
+
+1. **Buat Firebase Project:**
+   - Buka [console.firebase.google.com](https://console.firebase.google.com)
+   - Klik **Add Project** → isi nama project
+
+2. **Register Android App:**
+   - Klik icon Android (🤖)
+   - **Package name:** `com.example.ekspedisi_app`
+   - Download `google-services.json`
+   - Taruh file di: `ekspedisi_app/android/app/google-services.json`
+
+3. **Install FlutterFire CLI:**
+   ```bash
+   dart pub global activate flutterfire_cli
+   flutterfire configure --project=your-project-id
+   ```
+
+4. **Set Parameter di Firebase Console:**
+   - Buka **Remote Config** di sidebar Firebase
+   - Tambahkan parameter:
+     | Parameter | Default Value |
+     |-----------|---------------|
+     | `harga_biosolar` | `6800` |
+     | `harga_pertalite` | `10000` |
+     | `harga_pertamax` | `12500` |
+   - Klik **Publish Changes**
+
+5. **Build ulang APK:**
+   ```bash
+   cd ekspedisi_app
+   flutter pub get
+   flutter build apk --release
+   ```
+
+### Cara Update Harga BBM
+
+**Opsi 1: Via Admin Dashboard (Web)**
+1. Buka `admin.html` → menu **⛽ Harga BBM**
+2. Edit harga → klik **Update**
+3. Harga tersimpan di database backend
+
+**Opsi 2: Via Firebase Console**
+1. Buka Firebase Console → Remote Config
+2. Edit parameter `harga_biosolar` / `harga_pertalite` / `harga_pertamax`
+3. Publish → Aplikasi akan fetch harga baru dalam 1 jam
+
+---
+
 ## 🛣️ Roadmap
 
+- [x] Firebase Remote Config (Harga BBM Real-time)
 - [ ] Push Notification (Firebase Cloud Messaging)
 - [ ] Export laporan ke PDF/Excel
 - [ ] Multi-role autentikasi (Admin, Sopir, Customer)

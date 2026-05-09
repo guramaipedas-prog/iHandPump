@@ -729,6 +729,23 @@ class DatabaseMVP {
     };
   }
 
+  // ==================== FUEL PRICES ====================
+  async getAllFuelPrices() {
+    return await this.query('SELECT * FROM fuel_prices ORDER BY nama ASC');
+  }
+
+  async getFuelPrice(jenis) {
+    return await this.get('SELECT * FROM fuel_prices WHERE jenis = ?', [jenis.toUpperCase()]);
+  }
+
+  async updateFuelPrice(jenis, harga) {
+    await this.run(
+      'UPDATE fuel_prices SET harga = ?, updated_at = CURRENT_TIMESTAMP WHERE jenis = ?',
+      [harga, jenis.toUpperCase()]
+    );
+    return await this.getFuelPrice(jenis);
+  }
+
   // ==================== STATS & DASHBOARD ====================
   async getDashboardStats({ month, year } = {}) {
     // Build WHERE clause for month/year filter

@@ -125,4 +125,83 @@ router.post('/calculate-by-template', async (req, res) => {
   }
 });
 
+// ==================== FUEL PRICES ====================
+
+// GET /api/uang-jalan/fuel-prices - List semua harga BBM
+router.get('/fuel-prices', async (req, res) => {
+  try {
+    const prices = await db.getAllFuelPrices();
+    res.json({
+      success: true,
+      count: prices.length,
+      data: prices
+    });
+  } catch (error) {
+    console.error('Error fetching fuel prices:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Gagal mengambil harga BBM'
+    });
+  }
+});
+
+// GET /api/uang-jalan/fuel-prices/:jenis - Get single harga BBM
+router.get('/fuel-prices/:jenis', async (req, res) => {
+  try {
+    const price = await db.getFuelPrice(req.params.jenis);
+    if (!price) {
+      return res.status(404).json({
+        success: false,
+        error: 'Jenis BBM tidak ditemukan'
+      });
+    }
+    res.json({
+      success: true,
+      data: price
+    });
+  } catch (error) {
+    console.error('Error fetching fuel price:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Gagal mengambil harga BBM'
+    });
+  }
+});
+
+// PUT /api/uang-jalan/fuel-prices/:jenis - Update harga BBM
+router.put('/fuel-prices/:jenis', async (req, res) => {
+  try {
+    const { jenis } = req.params;
+    const { harga } = req.body;
+
+    if (harga === undefined || harga === null || isNaN(harga) || harga < 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Harga harus berupa angka positif'
+      });
+    }
+
+    const existing = await db.getFuelPrice(jenis);
+    if (!existing) {
+      return res.status(404).json({
+        success: false,
+        error: 'Jenis BBM tidak ditemukan'
+      });
+    }
+
+    const updated = await db.updateFuelPrice(jenis, parseFloat(harga));
+    res.json({
+      success: true,
+      message: `Harga ${updated.nama} berhasil diupdate`,
+      data: updated
+    });
+  } catch (error) {
+    console.error('Error updating fuel price:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Gagal mengupdate harga BBM'
+    });
+  }
+});
+
 module.exports = router;

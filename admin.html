@@ -568,6 +568,9 @@ tr:hover td {
       <a href="driver-form.html" class="nav-item" target="_blank">
         <span class="nav-icon">📝</span> Form Sopir
       </a>
+      <button class="nav-item" onclick="showView('fuel')">
+        <span class="nav-icon">⛽</span> Harga BBM
+      </button>
     </nav>
     <div class="sidebar-footer">
       MVP v2.0 • Local Mode
@@ -776,6 +779,25 @@ tr:hover td {
               </thead>
               <tbody></tbody>
             </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fuel Prices View -->
+    <div id="view-fuel" class="view-section">
+      <div class="header">
+        <h1>⛽ Harga BBM</h1>
+        <p style="color: var(--muted); font-size: 0.9rem;">Update harga bahan bakar real-time</p>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">Daftar Harga BBM</span>
+        </div>
+        <div class="section-body">
+          <div id="fuel-prices-container" style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+            <!-- Fuel cards will be loaded here -->
           </div>
         </div>
       </div>
@@ -1016,6 +1038,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDrivers();
   loadCustomers();
   loadBilling();
+  loadFuelPrices();
 });
 
 // Navigation
@@ -1031,6 +1054,7 @@ function showView(viewName) {
   if (viewName === 'drivers') loadDrivers();
   if (viewName === 'customers') loadCustomers();
   if (viewName === 'billing') loadBilling();
+  if (viewName === 'fuel') loadFuelPrices();
 }
 
 // Modal Functions
@@ -1044,6 +1068,73 @@ function openModal(modalId) {
 
 function closeModal(modalId) {
   document.getElementById(modalId).classList.remove('active');
+}
+
+// ==================== FUEL PRICES ====================
+async function loadFuelPrices() {
+  try {
+    const response = await fetch(`${API_BASE}/api/uang-jalan/fuel-prices`);
+    const result = await response.json();
+    if (!result.success) return;
+
+    const container = document.getElementById('fuel-prices-container');
+    container.innerHTML = result.data.map(fuel => `
+      <div class="card" style="padding: 1.5rem; border: 1px solid var(--border); border-radius: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 style="font-size: 1.1rem; font-weight: 600;">${fuel.nama}</h3>
+          <span style="font-size: 0.75rem; padding: 0.25rem 0.5rem; background: var(--card); border-radius: 4px; color: var(--muted);">${fuel.jenis}</span>
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">
+            Rp ${parseInt(fuel.harga).toLocaleString('id-ID')}
+          </div>
+          <div style="font-size: 0.8rem; color: var(--muted);">per ${fuel.satuan}</div>
+        </div>
+        <div style="font-size: 0.75rem; color: var(--muted); margin-bottom: 1rem;">
+          Terakhir update: ${new Date(fuel.updated_at).toLocaleString('id-ID')}
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <input type="number" id="fuel-input-${fuel.jenis}" value="${fuel.harga}" 
+            style="flex: 1; padding: 0.5rem; background: var(--black); border: 1px solid var(--border); border-radius: 6px; color: var(--white); font-size: 0.9rem;">
+          <button onclick="updateFuelPrice('${fuel.jenis}', '${fuel.nama}')" 
+            style="padding: 0.5rem 1rem; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+            Update
+          </button>
+        </div>
+      </div>
+    `).join('');
+  } catch (error) {
+    console.error('Error loading fuel prices:', error);
+  }
+}
+
+async function updateFuelPrice(jenis, nama) {
+  const input = document.getElementById(`fuel-input-${jenis}`);
+  const harga = parseFloat(input.value);
+  
+  if (isNaN(harga) || harga < 0) {
+    alert('Harga harus berupa angka positif');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/api/uang-jalan/fuel-prices/${jenis}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ harga })
+    });
+    const result = await response.json();
+    
+    if (result.success) {
+      alert(`Harga ${nama} berhasil diupdate menjadi Rp ${harga.toLocaleString('id-ID')}`);
+      loadFuelPrices();
+    } else {
+      alert(result.error || 'Gagal mengupdate harga');
+    }
+  } catch (error) {
+    console.error('Error updating fuel price:', error);
+    alert('Terjadi kesalahan saat mengupdate harga');
+  }
 }
 
 // Format currency
