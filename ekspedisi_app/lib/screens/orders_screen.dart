@@ -341,7 +341,24 @@ class _OrdersScreenState extends State<OrdersScreen> {
     Driver? selectedDriver;
     String selectedFuelType = 'BIOSOLAR';
     double fuelPrice = 6800;
+    double totalUangJalan = 0;
     bool isSaving = false;
+
+    // Hitung total uang jalan otomatis
+    void calculateTotal() {
+      final jarak = double.tryParse(jarakCtrl.text) ?? 0;
+      final konsumsi = double.tryParse(konsumsiCtrl.text) ?? 5;
+      final tol = double.tryParse(tolCtrl.text.replaceAll('.', '')) ?? 0;
+      final makan = double.tryParse(makanCtrl.text.replaceAll('.', '')) ?? 0;
+      
+      if (jarak > 0 && konsumsi > 0 && fuelPrice > 0) {
+        final bbmNeeded = jarak / konsumsi;
+        final totalBbm = bbmNeeded * fuelPrice;
+        totalUangJalan = totalBbm + tol + makan;
+      } else {
+        totalUangJalan = 0;
+      }
+    }
 
     final fuelTypes = {
       'BIOSOLAR': 'Bio Solar / Pertamina Dex',
@@ -353,7 +370,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
       try {
         final price = await ApiService().getFuelPrice(selectedFuelType);
         if (price != null && mounted) {
-          setState(() => fuelPrice = price);
+          setState(() {
+            fuelPrice = price;
+            calculateTotal();
+          });
         }
       } catch (e) {
         // Fallback ke default
@@ -468,6 +488,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     controller: jarakCtrl,
                     decoration: const InputDecoration(labelText: 'Jarak (km)'),
                     keyboardType: TextInputType.number,
+                    onChanged: (_) => setState(() => calculateTotal()),
                   ),
                   const SizedBox(height: 8),
                   TextField(
@@ -481,6 +502,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       FilteringTextInputFormatter.digitsOnly,
                       _RupiahInputFormatter(),
                     ],
+                    onChanged: (_) => setState(() => calculateTotal()),
                   ),
                   const SizedBox(height: 8),
                   TextField(
@@ -494,6 +516,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       FilteringTextInputFormatter.digitsOnly,
                       _RupiahInputFormatter(),
                     ],
+                    onChanged: (_) => setState(() => calculateTotal()),
                   ),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
@@ -526,6 +549,28 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       hintText: '5',
                     ),
                     keyboardType: TextInputType.number,
+                    onChanged: (_) => setState(() => calculateTotal()),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.black,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppTheme.primary),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('💰 Estimasi Uang Jalan', style: TextStyle(fontSize: 12, color: AppTheme.muted)),
+                        const SizedBox(height: 4),
+                        Text(
+                          formatRupiah(totalUangJalan),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.primary),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
