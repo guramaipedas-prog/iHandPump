@@ -333,7 +333,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
     final tolCtrl = TextEditingController();
     final makanCtrl = TextEditingController();
     final nopolCtrl = TextEditingController();
-    final konsumsiCtrl = TextEditingController(text: '5');
+    final konsumsiCtrl = TextEditingController(text: '6');
 
     Customer? selectedCustomer;
     JavaCity? selectedCityA;
@@ -343,6 +343,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
     double fuelPrice = 6800;
     double totalUangJalan = 0;
     bool isSaving = false;
+
+    // Ambil harga dari provider (selalu terbaru)
+    if (provider.fuelPrices.containsKey('BIOSOLAR')) {
+      fuelPrice = (provider.fuelPrices['BIOSOLAR']['harga'] as num).toDouble();
+    }
 
     // Hitung total uang jalan otomatis
     void calculateTotal() {
@@ -365,28 +370,16 @@ class _OrdersScreenState extends State<OrdersScreen> {
       'SOLAR': 'Solar Industri',
     };
 
-    // Ambil harga BBM terbaru dari backend
-    Future<void> loadFuelPrice() async {
-      try {
-        final price = await ApiService().getFuelPrice(selectedFuelType);
-        if (price != null && mounted) {
-          setState(() {
-            fuelPrice = price;
-            calculateTotal();
-          });
-        }
-      } catch (e) {
-        // Fallback ke default
+    void updateFuelPrice(String type) {
+      selectedFuelType = type;
+      final priceData = provider.fuelPrices[type];
+      if (priceData != null) {
+        setState(() {
+          fuelPrice = (priceData['harga'] as num).toDouble();
+          calculateTotal();
+        });
       }
     }
-
-    void updateFuelPrice(String type) async {
-      selectedFuelType = type;
-      await loadFuelPrice();
-    }
-
-    // Load harga awal
-    loadFuelPrice();
 
     showDialog(
       context: context,
@@ -542,15 +535,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     style: const TextStyle(fontSize: 12, color: AppTheme.primary),
                   ),
                   const SizedBox(height: 8),
-                  TextField(
-                    controller: konsumsiCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Konsumsi BBM (km/liter)',
-                      hintText: '5',
-                    ),
-                    keyboardType: TextInputType.number,
-                    onChanged: (_) => setState(() => calculateTotal()),
-                  ),
                   const SizedBox(height: 12),
                   Container(
                     width: double.infinity,

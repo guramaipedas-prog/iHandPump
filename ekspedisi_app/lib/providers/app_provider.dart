@@ -20,6 +20,7 @@ class AppProvider extends ChangeNotifier {
   List<Order> _billingOrders = [];
   DashboardStats? _dashboardStats;
   Shipment? _trackedShipment;
+  Map<String, dynamic> _fuelPrices = {};
 
   // Getters
   bool get isLoading => _isLoading;
@@ -30,6 +31,7 @@ class AppProvider extends ChangeNotifier {
   List<Order> get billingOrders => _billingOrders;
   DashboardStats? get dashboardStats => _dashboardStats;
   Shipment? get trackedShipment => _trackedShipment;
+  Map<String, dynamic> get fuelPrices => _fuelPrices;
 
   void _setLoading(bool value) {
     _isLoading = value;
@@ -282,6 +284,30 @@ class AppProvider extends ChangeNotifier {
   void clearTrackedShipment() {
     _trackedShipment = null;
     notifyListeners();
+  }
+
+  // ==================== FUEL PRICES ====================
+  Future<void> loadFuelPrices() async {
+    try {
+      final prices = await _api.getAllFuelPrices();
+      _fuelPrices = {for (var p in prices) p['jenis']: p};
+      notifyListeners();
+    } catch (e) {
+      // Silently fail, keep existing prices
+    }
+  }
+
+  Future<void> updateFuelPrice(String jenis, double harga) async {
+    _setLoading(true);
+    try {
+      await _api.updateFuelPrice(jenis, harga);
+      await loadFuelPrices();
+    } catch (e) {
+      _setError(e.toString());
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
   }
 
   // ==================== DRIVER LOGS ====================

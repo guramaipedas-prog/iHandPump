@@ -490,4 +490,33 @@ class ApiService {
       return null;
     }
   }
+
+  Future<List<dynamic>> getAllFuelPrices() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/uang-jalan/fuel-prices'),
+      headers: headers,
+    ).timeout(const Duration(seconds: 5));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success'] == true) {
+        return data['data'] ?? [];
+      }
+    }
+    throw Exception(_parseError(response));
+  }
+
+  Future<void> updateFuelPrice(String jenis, double harga) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/uang-jalan/fuel-prices/$jenis'),
+      headers: headers,
+      body: jsonEncode({'harga': harga}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success'] == true) return;
+    }
+    throw Exception(_parseError(response));
+  }
 }

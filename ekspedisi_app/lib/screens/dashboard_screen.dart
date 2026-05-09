@@ -7,6 +7,7 @@ import '../widgets/status_badge.dart';
 import 'customers_screen.dart';
 import 'drivers_screen.dart';
 import 'billing_screen.dart';
+import 'fuel_prices_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -21,6 +22,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AppProvider>().loadDashboardStats();
+      context.read<AppProvider>().loadFuelPrices();
     });
   }
 
@@ -140,6 +142,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => const BillingScreen()),
+                      ),
+                    ),
+                    _QuickAction(
+                      icon: Icons.local_gas_station,
+                      label: 'Harga BBM',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const FuelPricesScreen()),
                       ),
                     ),
                   ],
