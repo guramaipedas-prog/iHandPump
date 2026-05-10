@@ -5,8 +5,12 @@ const db = require('../database/db-mvp');
 // GET /api/billing - List semua tagihan
 router.get('/', async (req, res) => {
   try {
-    const { status } = req.query;
-    const billings = await db.getBillingList(status);
+    const { status, month, year } = req.query;
+    const billings = await db.getBillingList(
+      status,
+      month ? parseInt(month) : null,
+      year ? parseInt(year) : null
+    );
     res.json({
       success: true,
       count: billings.length,
@@ -42,7 +46,11 @@ router.get('/ready/list', async (req, res) => {
 // GET /api/billing/stats - Get statistik penagihan
 router.get('/stats/summary', async (req, res) => {
   try {
-    const stats = await db.getBillingStats();
+    const { month, year } = req.query;
+    const stats = await db.getBillingStats({
+      month: month ? parseInt(month) : null,
+      year: year ? parseInt(year) : null
+    });
     res.json({
       success: true,
       data: stats
