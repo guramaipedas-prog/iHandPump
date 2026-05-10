@@ -15,7 +15,7 @@ class ApiService {
   // Local: 'http://10.0.2.2:3000/api' (untuk Android emulator)
   // Local: 'http://localhost:3000/api' (untuk iOS simulator)
   // Production: 'https://your-domain.com/api'
-  String baseUrl = 'https://ihandpump-production.up.railway.app/api';
+  String baseUrl = 'https://inaknan-production.up.railway.app/api';
 
   void setBaseUrl(String url) {
     baseUrl = url.endsWith('/api') ? url : '$url/api';
@@ -408,9 +408,11 @@ class ApiService {
   }
 
   // ==================== BILLING ====================
-  Future<List<Order>> getBilling({String? status}) async {
+  Future<List<Order>> getBilling({String? status, int? month, int? year}) async {
     final queryParams = <String, String>{};
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
+    if (month != null) queryParams['month'] = month.toString();
+    if (year != null) queryParams['year'] = year.toString();
 
     final uri = Uri.parse('$baseUrl/billing').replace(queryParameters: queryParams);
     final response = await http.get(uri, headers: headers);
@@ -442,13 +444,30 @@ class ApiService {
   }
 
   // ==================== DASHBOARD ====================
-  Future<DashboardStats> getDashboardStats() async {
-    final response = await http.get(Uri.parse('$baseUrl/orders/stats/dashboard'), headers: headers);
+  Future<DashboardStats> getDashboardStats({int? month, int? year}) async {
+    final queryParams = <String, String>{};
+    if (month != null) queryParams['month'] = month.toString();
+    if (year != null) queryParams['year'] = year.toString();
+
+    final uri = Uri.parse('$baseUrl/orders/stats/dashboard').replace(queryParameters: queryParams);
+    final response = await http.get(uri, headers: headers);
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       if (data['success'] == true) {
         return DashboardStats.fromJson(data['data']);
+      }
+    }
+    throw Exception(_parseError(response));
+  }
+
+  Future<List<Map<String, dynamic>>> getAvailablePeriods() async {
+    final response = await http.get(Uri.parse('$baseUrl/orders/available-periods'), headers: headers);
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success'] == true) {
+        return List<Map<String, dynamic>>.from(data['data'] ?? []);
       }
     }
     throw Exception(_parseError(response));

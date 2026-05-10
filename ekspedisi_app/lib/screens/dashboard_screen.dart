@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
-import '../widgets/status_badge.dart';
 import 'customers_screen.dart';
 import 'drivers_screen.dart';
 import 'billing_screen.dart';
@@ -21,8 +20,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AppProvider>().loadDashboardStats();
-      context.read<AppProvider>().loadFuelPrices();
+      final provider = context.read<AppProvider>();
+      provider.loadAvailablePeriods();
+      provider.loadDashboardStats();
+      provider.loadFuelPrices();
     });
   }
 
@@ -31,15 +32,121 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(value);
   }
 
+  String _monthName(int month) {
+    const names = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    return names[month];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('🚚 Ekspedisi MVP'),
+        title: Consumer<AppProvider>(
+          builder: (context, provider, child) {
+            final periods = provider.availablePeriods;
+            final selectedMonth = provider.selectedMonth;
+            final selectedYear = provider.selectedYear;
+
+            // Extract unique years
+            final years = <int>{};
+            for (final p in periods) {
+              years.add(p['year'] as int);
+            }
+            final sortedYears = years.toList()..sort((a, b) => b.compareTo(a));
+
+            // Filter months for selected year
+            final monthsForYear = <int>{};
+            if (selectedYear != null) {
+              for (final p in periods) {
+                if (p['year'] == selectedYear) {
+                  monthsForYear.add(p['month'] as int);
+                }
+              }
+            } else {
+              for (final p in periods) {
+                monthsForYear.add(p['month'] as int);
+              }
+            }
+            final sortedMonths = monthsForYear.toList()..sort((a, b) => b.compareTo(a));
+
+            return Row(
+              children: [
+                // Month Dropdown
+                DropdownButton<int?>(
+                  value: selectedMonth,
+                  isDense: true,
+                  underline: const SizedBox(),
+                  icon: const Icon(Icons.arrow_drop_down, size: 18),
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  dropdownColor: AppTheme.card,
+                  hint: const Text('Bulan', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('Semua', style: TextStyle(fontSize: 13))),
+                    ...sortedMonths.map((m) => DropdownMenuItem(
+                      value: m,
+                      child: Text(_monthName(m), style: const TextStyle(fontSize: 13)),
+                    )),
+                  ],
+                  onChanged: (value) {
+                    if (value == null) {
+                      provider.clearPeriod();
+                    } else if (selectedYear != null) {
+                      provider.selectPeriod(value, selectedYear);
+                    } else if (sortedYears.isNotEmpty) {
+                      provider.selectPeriod(value, sortedYears.first);
+                    }
+                  },
+                ),
+                const SizedBox(width: 8),
+                // Year Dropdown
+                DropdownButton<int?>(
+                  value: selectedYear,
+                  isDense: true,
+                  underline: const SizedBox(),
+                  icon: const Icon(Icons.arrow_drop_down, size: 18),
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  dropdownColor: AppTheme.card,
+                  hint: const Text('Tahun', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('Semua', style: TextStyle(fontSize: 13))),
+                    ...sortedYears.map((y) => DropdownMenuItem(
+                      value: y,
+                      child: Text('$y', style: const TextStyle(fontSize: 13)),
+                    )),
+                  ],
+                  onChanged: (value) {
+                    if (value == null) {
+                      provider.clearPeriod();
+                    } else if (selectedMonth != null) {
+                      provider.selectPeriod(selectedMonth, value);
+                    } else {
+                      // Pick the latest available month for this year
+                      final availableMonths = periods
+                          .where((p) => p['year'] == value)
+                          .map((p) => p['month'] as int)
+                          .toList()
+                        ..sort((a, b) => b.compareTo(a));
+                      if (availableMonths.isNotEmpty) {
+                        provider.selectPeriod(availableMonths.first, value);
+                      }
+                    }
+                  },
+                ),
+              ],
+            );
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => context.read<AppProvider>().loadDashboardStats(),
+            onPressed: () {
+              final provider = context.read<AppProvider>();
+              provider.loadDashboardStats(
+                month: provider.selectedMonth,
+                year: provider.selectedYear,
+              );
+            },
           ),
         ],
       ),
@@ -66,7 +173,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           }
 
           return RefreshIndicator(
-            onRefresh: () => provider.loadDashboardStats(),
+            onRefresh: () => provider.loadDashboardStats(
+              month: provider.selectedMonth,
+              year: provider.selectedYear,
+            ),
             color: AppTheme.primary,
             child: ListView(
               padding: const EdgeInsets.all(16),
