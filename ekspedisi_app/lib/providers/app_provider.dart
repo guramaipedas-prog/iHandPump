@@ -20,6 +20,9 @@ class AppProvider extends ChangeNotifier {
   List<Order> _billingOrders = [];
   DashboardStats? _dashboardStats;
   Shipment? _trackedShipment;
+  List<Map<String, dynamic>> _availablePeriods = [];
+  int? _selectedMonth;
+  int? _selectedYear;
   Map<String, dynamic> _fuelPrices = {
     'BIOSOLAR': {'jenis': 'BIOSOLAR', 'nama': 'Pertamina Dex / Bio Solar', 'harga': 6800, 'satuan': 'liter'},
     'SOLAR': {'jenis': 'SOLAR', 'nama': 'Solar Industri', 'harga': 7200, 'satuan': 'liter'},
@@ -34,6 +37,9 @@ class AppProvider extends ChangeNotifier {
   List<Order> get billingOrders => _billingOrders;
   DashboardStats? get dashboardStats => _dashboardStats;
   Shipment? get trackedShipment => _trackedShipment;
+  List<Map<String, dynamic>> get availablePeriods => _availablePeriods;
+  int? get selectedMonth => _selectedMonth;
+  int? get selectedYear => _selectedYear;
   Map<String, dynamic> get fuelPrices => _fuelPrices;
 
   void _setLoading(bool value) {
@@ -260,15 +266,38 @@ class AppProvider extends ChangeNotifier {
   }
 
   // ==================== DASHBOARD ====================
-  Future<void> loadDashboardStats() async {
+  Future<void> loadDashboardStats({int? month, int? year}) async {
     _setLoading(true);
     _setError(null);
     try {
-      _dashboardStats = await _api.getDashboardStats();
+      _dashboardStats = await _api.getDashboardStats(month: month, year: year);
     } catch (e) {
       _setError(e.toString());
     }
     _setLoading(false);
+  }
+
+  Future<void> loadAvailablePeriods() async {
+    try {
+      _availablePeriods = await _api.getAvailablePeriods();
+      notifyListeners();
+    } catch (e) {
+      // silently fail
+    }
+  }
+
+  void selectPeriod(int month, int year) {
+    _selectedMonth = month;
+    _selectedYear = year;
+    notifyListeners();
+    loadDashboardStats(month: month, year: year);
+  }
+
+  void clearPeriod() {
+    _selectedMonth = null;
+    _selectedYear = null;
+    notifyListeners();
+    loadDashboardStats();
   }
 
   // ==================== TRACKING ====================

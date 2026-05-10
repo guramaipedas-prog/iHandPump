@@ -442,13 +442,30 @@ class ApiService {
   }
 
   // ==================== DASHBOARD ====================
-  Future<DashboardStats> getDashboardStats() async {
-    final response = await http.get(Uri.parse('$baseUrl/orders/stats/dashboard'), headers: headers);
+  Future<DashboardStats> getDashboardStats({int? month, int? year}) async {
+    final queryParams = <String, String>{};
+    if (month != null) queryParams['month'] = month.toString();
+    if (year != null) queryParams['year'] = year.toString();
+
+    final uri = Uri.parse('$baseUrl/orders/stats/dashboard').replace(queryParameters: queryParams);
+    final response = await http.get(uri, headers: headers);
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       if (data['success'] == true) {
         return DashboardStats.fromJson(data['data']);
+      }
+    }
+    throw Exception(_parseError(response));
+  }
+
+  Future<List<Map<String, dynamic>>> getAvailablePeriods() async {
+    final response = await http.get(Uri.parse('$baseUrl/orders/available-periods'), headers: headers);
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success'] == true) {
+        return List<Map<String, dynamic>>.from(data['data'] ?? []);
       }
     }
     throw Exception(_parseError(response));

@@ -27,6 +27,16 @@ class _BillingScreenState extends State<BillingScreen> {
     return NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(value);
   }
 
+  String formatTanggal(String? tanggal) {
+    if (tanggal == null || tanggal.isEmpty) return '-';
+    try {
+      final dt = DateTime.parse(tanggal);
+      return DateFormat('dd MMM yyyy', 'id_ID').format(dt);
+    } catch (e) {
+      return tanggal;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

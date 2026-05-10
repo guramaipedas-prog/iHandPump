@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
-import '../widgets/status_badge.dart';
 import 'customers_screen.dart';
 import 'drivers_screen.dart';
 import 'billing_screen.dart';
@@ -21,8 +20,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AppProvider>().loadDashboardStats();
-      context.read<AppProvider>().loadFuelPrices();
+      final provider = context.read<AppProvider>();
+      provider.loadAvailablePeriods();
+      provider.loadDashboardStats();
+      provider.loadFuelPrices();
     });
   }
 
@@ -31,15 +32,86 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(value);
   }
 
+  String _monthName(int month) {
+    const names = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    return names[month];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('🚚 Ekspedisi MVP'),
+        title: Consumer<AppProvider>(
+          builder: (context, provider, child) {
+            final periods = provider.availablePeriods;
+            final selectedMonth = provider.selectedMonth;
+            final selectedYear = provider.selectedYear;
+
+            // Build dropdown items
+            final items = <DropdownMenuItem<Map<String, dynamic>?>>[
+              const DropdownMenuItem(
+                value: null,
+                child: Text('Semua', style: TextStyle(fontSize: 13)),
+              ),
+            ];
+
+            // Sort periods descending (newest first)
+            final sortedPeriods = List<Map<String, dynamic>>.from(periods)
+              ..sort((a, b) {
+                final cmp = (b['year'] as int).compareTo(a['year'] as int);
+                if (cmp != 0) return cmp;
+                return (b['month'] as int).compareTo(a['month'] as int);
+              });
+
+            for (final p in sortedPeriods) {
+              final month = p['month'] as int;
+              final year = p['year'] as int;
+              items.add(
+                DropdownMenuItem(
+                  value: {'month': month, 'year': year},
+                  child: Text(
+                    '${_monthName(month)} $year',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+              );
+            }
+
+            // Current value
+            Map<String, dynamic>? currentValue;
+            if (selectedMonth != null && selectedYear != null) {
+              currentValue = {'month': selectedMonth, 'year': selectedYear};
+            }
+
+            return DropdownButton<Map<String, dynamic>?>(
+              value: currentValue,
+              isDense: true,
+              underline: const SizedBox(),
+              icon: const Icon(Icons.arrow_drop_down, size: 20),
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+              dropdownColor: AppTheme.card,
+              items: items,
+              onChanged: (value) {
+                if (value == null) {
+                  provider.clearPeriod();
+                } else {
+                  provider.selectPeriod(value['month'] as int, value['year'] as int);
+                }
+              },
+            );
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => context.read<AppProvider>().loadDashboardStats(),
+            onPressed: () {
+              final provider = context.read<AppProvider>();
+              provider.loadDashboardStats(
+                month: provider.selectedMonth,
+                year: provider.selectedYear,
+              );
+            },
           ),
         ],
       ),
@@ -66,7 +138,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           }
 
           return RefreshIndicator(
-            onRefresh: () => provider.loadDashboardStats(),
+            onRefresh: () => provider.loadDashboardStats(
+              month: provider.selectedMonth,
+              year: provider.selectedYear,
+            ),
             color: AppTheme.primary,
             child: ListView(
               padding: const EdgeInsets.all(16),
