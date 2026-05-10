@@ -23,6 +23,8 @@ class AppProvider extends ChangeNotifier {
   List<Map<String, dynamic>> _availablePeriods = [];
   int? _selectedMonth;
   int? _selectedYear;
+  int? _billingMonth;
+  int? _billingYear;
   Map<String, dynamic> _fuelPrices = {
     'BIOSOLAR': {'jenis': 'BIOSOLAR', 'nama': 'Pertamina Dex / Bio Solar', 'harga': 6800, 'satuan': 'liter'},
     'SOLAR': {'jenis': 'SOLAR', 'nama': 'Solar Industri', 'harga': 7200, 'satuan': 'liter'},
@@ -40,6 +42,8 @@ class AppProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get availablePeriods => _availablePeriods;
   int? get selectedMonth => _selectedMonth;
   int? get selectedYear => _selectedYear;
+  int? get billingMonth => _billingMonth;
+  int? get billingYear => _billingYear;
   Map<String, dynamic> get fuelPrices => _fuelPrices;
 
   void _setLoading(bool value) {
@@ -240,15 +244,29 @@ class AppProvider extends ChangeNotifier {
   }
 
   // ==================== BILLING ====================
-  Future<void> loadBilling({String? status}) async {
+  Future<void> loadBilling({String? status, int? month, int? year}) async {
     _setLoading(true);
     _setError(null);
     try {
-      _billingOrders = await _api.getBilling(status: status);
+      _billingOrders = await _api.getBilling(status: status, month: month, year: year);
     } catch (e) {
       _setError(e.toString());
     }
     _setLoading(false);
+  }
+
+  void selectBillingPeriod(int month, int year) {
+    _billingMonth = month;
+    _billingYear = year;
+    notifyListeners();
+    loadBilling(month: month, year: year);
+  }
+
+  void clearBillingPeriod() {
+    _billingMonth = null;
+    _billingYear = null;
+    notifyListeners();
+    loadBilling();
   }
 
   Future<void> updateBillingStatus(String id, String status) async {

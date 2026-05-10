@@ -5,8 +5,12 @@ const db = require('../database/db-mvp');
 // GET /api/billing - List semua tagihan
 router.get('/', async (req, res) => {
   try {
-    const { status } = req.query;
-    const billings = await db.getBillingList(status);
+    const { status, month, year } = req.query;
+    const billings = await db.getBillingList(
+      status,
+      month ? parseInt(month) : null,
+      year ? parseInt(year) : null
+    );
     res.json({
       success: true,
       count: billings.length,

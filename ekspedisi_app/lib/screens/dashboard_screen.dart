@@ -33,8 +33,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   String _monthName(int month) {
-    const names = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const names = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     return names[month];
   }
 
@@ -48,57 +48,92 @@ class _DashboardScreenState extends State<DashboardScreen> {
             final selectedMonth = provider.selectedMonth;
             final selectedYear = provider.selectedYear;
 
-            // Build dropdown items
-            final items = <DropdownMenuItem<Map<String, dynamic>?>>[
-              const DropdownMenuItem(
-                value: null,
-                child: Text('Semua', style: TextStyle(fontSize: 13)),
-              ),
-            ];
-
-            // Sort periods descending (newest first)
-            final sortedPeriods = List<Map<String, dynamic>>.from(periods)
-              ..sort((a, b) {
-                final cmp = (b['year'] as int).compareTo(a['year'] as int);
-                if (cmp != 0) return cmp;
-                return (b['month'] as int).compareTo(a['month'] as int);
-              });
-
-            for (final p in sortedPeriods) {
-              final month = p['month'] as int;
-              final year = p['year'] as int;
-              items.add(
-                DropdownMenuItem(
-                  value: {'month': month, 'year': year},
-                  child: Text(
-                    '${_monthName(month)} $year',
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ),
-              );
+            // Extract unique years
+            final years = <int>{};
+            for (final p in periods) {
+              years.add(p['year'] as int);
             }
+            final sortedYears = years.toList()..sort((a, b) => b.compareTo(a));
 
-            // Current value
-            Map<String, dynamic>? currentValue;
-            if (selectedMonth != null && selectedYear != null) {
-              currentValue = {'month': selectedMonth, 'year': selectedYear};
-            }
-
-            return DropdownButton<Map<String, dynamic>?>(
-              value: currentValue,
-              isDense: true,
-              underline: const SizedBox(),
-              icon: const Icon(Icons.arrow_drop_down, size: 20),
-              style: const TextStyle(color: Colors.white, fontSize: 14),
-              dropdownColor: AppTheme.card,
-              items: items,
-              onChanged: (value) {
-                if (value == null) {
-                  provider.clearPeriod();
-                } else {
-                  provider.selectPeriod(value['month'] as int, value['year'] as int);
+            // Filter months for selected year
+            final monthsForYear = <int>{};
+            if (selectedYear != null) {
+              for (final p in periods) {
+                if (p['year'] == selectedYear) {
+                  monthsForYear.add(p['month'] as int);
                 }
-              },
+              }
+            } else {
+              for (final p in periods) {
+                monthsForYear.add(p['month'] as int);
+              }
+            }
+            final sortedMonths = monthsForYear.toList()..sort((a, b) => b.compareTo(a));
+
+            return Row(
+              children: [
+                // Month Dropdown
+                DropdownButton<int?>(
+                  value: selectedMonth,
+                  isDense: true,
+                  underline: const SizedBox(),
+                  icon: const Icon(Icons.arrow_drop_down, size: 18),
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  dropdownColor: AppTheme.card,
+                  hint: const Text('Bulan', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('Semua', style: TextStyle(fontSize: 13))),
+                    ...sortedMonths.map((m) => DropdownMenuItem(
+                      value: m,
+                      child: Text(_monthName(m), style: const TextStyle(fontSize: 13)),
+                    )),
+                  ],
+                  onChanged: (value) {
+                    if (value == null) {
+                      provider.clearPeriod();
+                    } else if (selectedYear != null) {
+                      provider.selectPeriod(value, selectedYear);
+                    } else if (sortedYears.isNotEmpty) {
+                      provider.selectPeriod(value, sortedYears.first);
+                    }
+                  },
+                ),
+                const SizedBox(width: 8),
+                // Year Dropdown
+                DropdownButton<int?>(
+                  value: selectedYear,
+                  isDense: true,
+                  underline: const SizedBox(),
+                  icon: const Icon(Icons.arrow_drop_down, size: 18),
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  dropdownColor: AppTheme.card,
+                  hint: const Text('Tahun', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('Semua', style: TextStyle(fontSize: 13))),
+                    ...sortedYears.map((y) => DropdownMenuItem(
+                      value: y,
+                      child: Text('$y', style: const TextStyle(fontSize: 13)),
+                    )),
+                  ],
+                  onChanged: (value) {
+                    if (value == null) {
+                      provider.clearPeriod();
+                    } else if (selectedMonth != null) {
+                      provider.selectPeriod(selectedMonth, value);
+                    } else {
+                      // Pick the latest available month for this year
+                      final availableMonths = periods
+                          .where((p) => p['year'] == value)
+                          .map((p) => p['month'] as int)
+                          .toList()
+                        ..sort((a, b) => b.compareTo(a));
+                      if (availableMonths.isNotEmpty) {
+                        provider.selectPeriod(availableMonths.first, value);
+                      }
+                    }
+                  },
+                ),
+              ],
             );
           },
         ),

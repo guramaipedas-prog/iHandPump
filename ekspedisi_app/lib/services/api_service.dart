@@ -408,9 +408,11 @@ class ApiService {
   }
 
   // ==================== BILLING ====================
-  Future<List<Order>> getBilling({String? status}) async {
+  Future<List<Order>> getBilling({String? status, int? month, int? year}) async {
     final queryParams = <String, String>{};
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
+    if (month != null) queryParams['month'] = month.toString();
+    if (year != null) queryParams['year'] = year.toString();
 
     final uri = Uri.parse('$baseUrl/billing').replace(queryParameters: queryParams);
     final response = await http.get(uri, headers: headers);

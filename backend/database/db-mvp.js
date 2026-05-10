@@ -657,7 +657,7 @@ class DatabaseMVP {
   }
 
   // ==================== BILLING ====================
-  async getBillingList(status = null) {
+  async getBillingList(status = null, month = null, year = null) {
     let sql = `
       SELECT o.*, 
         c.nama as customer_nama_display,
@@ -671,6 +671,16 @@ class DatabaseMVP {
     if (status) {
       sql += ' AND o.status_tagihan = ?';
       params.push(status);
+    }
+
+    if (month != null && year != null) {
+      if (this.isPostgres) {
+        sql += ' AND EXTRACT(MONTH FROM o.tanggal) = $' + (params.length + 1);
+        sql += ' AND EXTRACT(YEAR FROM o.tanggal) = $' + (params.length + 2);
+      } else {
+        sql += " AND strftime('%m', o.tanggal) = ? AND strftime('%Y', o.tanggal) = ?";
+      }
+      params.push(month.toString().padStart(2, '0'), year.toString());
     }
 
     sql += ' ORDER BY o.tanggal DESC';
