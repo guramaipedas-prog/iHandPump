@@ -102,7 +102,12 @@ class _DriversScreenState extends State<DriversScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(controller: namaCtrl, decoration: const InputDecoration(labelText: 'Nama *')),
-              TextField(controller: telpCtrl, decoration: const InputDecoration(labelText: 'Telepon'), keyboardType: TextInputType.text),
+              TextField(
+                controller: telpCtrl,
+                decoration: const InputDecoration(labelText: 'Telepon'),
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              ),
               TextField(controller: nopolCtrl, decoration: const InputDecoration(labelText: 'No Polisi')),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
