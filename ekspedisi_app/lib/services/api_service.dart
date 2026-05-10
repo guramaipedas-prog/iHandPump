@@ -15,7 +15,7 @@ class ApiService {
   // Local: 'http://10.0.2.2:3000/api' (untuk Android emulator)
   // Local: 'http://localhost:3000/api' (untuk iOS simulator)
   // Production: 'https://your-domain.com/api'
-  String baseUrl = 'https://ihandpump-production.up.railway.app/api';
+  String baseUrl = 'https://inaknan-production.up.railway.app/api';
 
   void setBaseUrl(String url) {
     baseUrl = url.endsWith('/api') ? url : '$url/api';

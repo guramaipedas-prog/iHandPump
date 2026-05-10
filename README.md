@@ -6,7 +6,7 @@
   <a href="https://flutter.dev"><img src="https://img.shields.io/badge/Flutter-3.11+-02569B?style=flat&logo=flutter&logoColor=white" /></a>
   <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-14+-339933?style=flat&logo=node.js&logoColor=white" /></a>
   <a href="https://www.sqlite.org"><img src="https://img.shields.io/badge/SQLite-003B57?style=flat&logo=sqlite&logoColor=white" /></a>
-  <a href="https://github.com/guramaipedas-prog/iHandPump/releases/tag/v1.0.0"><img src="https://img.shields.io/badge/Release-v1.0.0-FF5A00?style=flat&logo=github" /></a>
+  <a href="https://github.com/iNAKNAN/iNAKNAN/releases/tag/v1.0.0"><img src="https://img.shields.io/badge/Release-v1.0.0-FF5A00?style=flat&logo=github" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat" /></a>
 </p>
 
@@ -110,7 +110,7 @@
 
 Cukup download dan install APK, tidak perlu clone repo:
 
-1. **Download APK** dari [GitHub Releases](https://github.com/guramaipedas-prog/iHandPump/releases/tag/v1.0.0)
+1. **Download APK** dari [GitHub Releases](https://github.com/iNAKNAN/iNAKNAN/releases/tag/v1.0.0)
 2. **Install** di Android (aktifkan *Install from unknown sources* jika diminta)
 3. **Buka aplikasi** dan mulai gunakan
 
@@ -125,8 +125,8 @@ Jika ingin develop, modifikasi, atau run project ini dari source code:
 #### 1. Clone Repository
 
 ```bash
-git clone https://github.com/guramaipedas-prog/iHandPump.git
-cd iHandPump
+git clone https://github.com/iNAKNAN/iNAKNAN.git
+cd iNAKNAN
 ```
 
 #### 2. Jalankan Backend
@@ -162,7 +162,7 @@ flutter run
 
 | Platform | File |
 |----------|------|
-| Android | [**Download APK v3**](https://github.com/guramaipedas-prog/iHandPump/releases/download/v1.0.0/ekspedisi-app-release-v3.apk) |
+| Android | [**Download APK v3**](https://github.com/iNAKNAN/iNAKNAN/releases/download/v1.0.0/ekspedisi-app-release-v3.apk) |
 
 > **Note:** Untuk install, aktifkan **"Install from unknown sources"** di pengaturan Android.
 
