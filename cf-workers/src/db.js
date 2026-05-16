@@ -137,6 +137,11 @@ class DatabaseD1 {
       params.push(filters.driver_id);
     }
 
+    if (filters.month && filters.year) {
+      conditions.push("strftime('%m', o.tanggal) = ? AND strftime('%Y', o.tanggal) = ?");
+      params.push(filters.month.toString().padStart(2, '0'), filters.year.toString());
+    }
+
     if (filters.search) {
       conditions.push('(o.id LIKE ? OR o.customer_nama LIKE ? OR o.driver_nama LIKE ?)');
       const searchPattern = `%${filters.search}%`;

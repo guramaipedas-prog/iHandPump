@@ -5,8 +5,8 @@ const app = new Hono();
 // GET /api/orders
 app.get('/', async (c) => {
   try {
-    const { status, search } = c.req.query();
-    const orders = await c.env.db.getAllOrders({ status, search });
+    const { status, search, month, year } = c.req.query();
+    const orders = await c.env.db.getAllOrders({ status, search, month: month ? parseInt(month) : null, year: year ? parseInt(year) : null });
     return c.json({ success: true, count: orders.length, data: orders });
   } catch (error) {
     console.error('Error fetching orders:', error);

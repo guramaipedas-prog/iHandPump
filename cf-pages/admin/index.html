@@ -628,6 +628,7 @@ tr:hover td {
               <thead>
                 <tr>
                   <th>No Order</th>
+                  <th>Tanggal</th>
                   <th>Customer</th>
                   <th>Rute</th>
                   <th>Status</th>
@@ -1262,6 +1263,7 @@ function applyDashboardFilter() {
   dashboardMonth = document.getElementById('dashboard-filter-month').value || null;
   updatePeriodDropdowns();
   loadDashboardStats();
+  loadRecentOrders();
 }
 
 function applyBillingFilter() {
@@ -1273,14 +1275,28 @@ function applyBillingFilter() {
 
 async function loadRecentOrders() {
   try {
-    const response = await fetch(`${API_URL}/orders/recent/list?limit=5`);
+    let url = `${API_URL}/orders`;
+    const params = [];
+    if (dashboardMonth && dashboardYear) {
+      params.push(`month=${dashboardMonth}`);
+      params.push(`year=${dashboardYear}`);
+    }
+    params.push('limit=5');
+    if (params.length > 0) url += '?' + params.join('&');
+
+    const response = await fetch(url);
     const result = await response.json();
     
     if (result.success) {
       const tbody = document.querySelector('#table-recent-orders tbody');
-      tbody.innerHTML = result.data.map(order => `
+      if (result.data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Tidak ada order</td></tr>';
+        return;
+      }
+      tbody.innerHTML = result.data.slice(0, 5).map(order => `
         <tr>
           <td><strong>${order.id}</strong></td>
+          <td>${formatDate(order.tanggal)}</td>
           <td>${order.customer_nama}</td>
           <td>${order.titik_a} → ${order.titik_b}</td>
           <td>${getStatusBadge(order.status)}</td>
