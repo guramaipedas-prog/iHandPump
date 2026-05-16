@@ -6,7 +6,7 @@ compatibility_date = "2025-05-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "ihandpump-db"
-database_id = "your-database-id-here"
+database_id = "77a35fa2-7d0d-4eae-8a62-9a5db1a25692"
 
 # Environment variables
 [vars]
