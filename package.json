@@ -1,14 +1,16 @@
 {
-  "name": "ekspedisi-mvp",
+  "name": "ihandpump-migration",
   "version": "2.0.0",
-  "description": "Ekspedisi MVP with PostgreSQL",
-  "main": "backend/server.js",
+  "description": "iHandPump - Migrasi Railway ke Cloudflare",
   "scripts": {
-    "start": "cd backend && npm start",
-    "build": "cd backend && npm install",
-    "dev": "cd backend && npm run dev"
+    "dev": "cd cf-workers && npm run dev",
+    "deploy:workers": "cd cf-workers && npm run deploy",
+    "deploy:pages": "bash deploy-pages.sh",
+    "deploy:all": "npm run deploy:workers && npm run deploy:pages",
+    "d1:create": "cd cf-workers && npm run d1:create",
+    "d1:migrate": "cd cf-workers && npm run d1:migrate",
+    "d1:migrate:local": "cd cf-workers && npm run d1:migrate:local"
   },
-  "engines": {
-    "node": ">=18.0.0"
-  }
+  "author": "guramaipedas-prog",
+  "license": "MIT"
 }

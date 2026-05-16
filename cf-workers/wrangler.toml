@@ -1,0 +1,16 @@
+name = "ihandpump-api"
+main = "src/index.js"
+compatibility_date = "2025-05-01"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "ihandpump-db"
+database_id = "your-database-id-here"
+
+# Environment variables
+[vars]
+NODE_ENV = "production"
+
+# Secrets (use `wrangler secret put` to set these)
+# API_KEY = "your-api-key"
