@@ -881,16 +881,6 @@ tr:hover td {
           <input type="number" class="form-input" id="uj-harga" placeholder="10000" value="10000" onchange="calculateUangJalan()">
         </div>
         <div class="form-group">
-          <label class="form-label">Biaya Tol</label>
-          <input type="number" class="form-input" id="uj-tol" placeholder="350000" onchange="calculateUangJalan()">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Biaya Makan</label>
-          <input type="number" class="form-input" id="uj-makan" placeholder="150000" onchange="calculateUangJalan()">
-        </div>
-        <div class="form-group">
           <label class="form-label">Total Uang Jalan</label>
           <input type="text" class="form-input" id="uj-total" readonly style="background: rgba(255,90,0,0.1); color: var(--primary); font-weight: 600;">
         </div>
@@ -1083,6 +1073,28 @@ function openModal(modalId) {
   if (modalId === 'modal-add-order') {
     loadDriverOptions();
     loadCustomerOptions();
+    generateOrderId();
+  }
+}
+
+async function generateOrderId() {
+  try {
+    const response = await fetch(`${API_URL}/orders`);
+    const result = await response.json();
+    let nextNum = 1;
+    if (result.success && result.data && result.data.length > 0) {
+      const ids = result.data.map(o => o.id).filter(id => id && id.startsWith('ORD-'));
+      const numbers = ids.map(id => {
+        const match = id.match(/ORD-(\d+)/);
+        return match ? parseInt(match[1]) : 0;
+      });
+      const maxNum = numbers.length > 0 ? Math.max(...numbers) : 0;
+      nextNum = maxNum + 1;
+    }
+    document.getElementById('order-id').value = 'ORD-' + String(nextNum).padStart(3, '0');
+  } catch (error) {
+    console.error('Error generating order ID:', error);
+    document.getElementById('order-id').value = 'ORD-001';
   }
 }
 
@@ -1391,12 +1403,9 @@ function calculateUangJalan() {
   const jarak = parseFloat(document.getElementById('uj-jarak').value) || 0;
   const konsumsi = parseFloat(document.getElementById('uj-konsumsi').value) || 5;
   const harga = parseFloat(document.getElementById('uj-harga').value) || 10000;
-  const tol = parseFloat(document.getElementById('uj-tol').value) || 0;
-  const makan = parseFloat(document.getElementById('uj-makan').value) || 0;
   
   const bbmNeeded = jarak / konsumsi;
-  const totalBbm = bbmNeeded * harga;
-  const total = totalBbm + tol + makan;
+  const total = bbmNeeded * harga;
   
   document.getElementById('uj-total').value = formatRupiah(total);
   return total;
@@ -1415,8 +1424,6 @@ async function submitOrder() {
     jarak_km: parseFloat(document.getElementById('uj-jarak').value) || 0,
     konsumsi_bbm: parseFloat(document.getElementById('uj-konsumsi').value) || 5,
     harga_bbm: parseFloat(document.getElementById('uj-harga').value) || 10000,
-    biaya_tol: parseFloat(document.getElementById('uj-tol').value) || 0,
-    biaya_makan: parseFloat(document.getElementById('uj-makan').value) || 0,
     nilai_tagihan: parseFloat(document.getElementById('order-tagihan').value) || 0
   };
   
