@@ -628,7 +628,7 @@ tr:hover td {
               <thead>
                 <tr>
                   <th>No Order</th>
-                  <th>Tanggal</th>
+                  <th>Tanggal Muat</th>
                   <th>Customer</th>
                   <th>Rute</th>
                   <th>Status</th>
@@ -672,7 +672,7 @@ tr:hover td {
               <thead>
                 <tr>
                   <th>No Order</th>
-                  <th>Tanggal</th>
+                  <th>Tanggal Muat</th>
                   <th>Customer</th>
                   <th>Rute</th>
                   <th>Sopir</th>
@@ -842,24 +842,34 @@ tr:hover td {
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Titik Muat (A) *</label>
-          <input type="text" class="form-input" id="order-titik-a" placeholder="Surabaya">
+          <label class="form-label">Tanggal Muat</label>
+          <input type="date" class="form-input" id="order-tanggal-muat">
         </div>
         <div class="form-group">
-          <label class="form-label">Titik Bongkar (B) *</label>
-          <input type="text" class="form-input" id="order-titik-b" placeholder="Jakarta">
+          <label class="form-label">Titik Muat (A) *</label>
+          <input type="text" class="form-input" id="order-titik-a" placeholder="Surabaya">
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
+          <label class="form-label">Titik Bongkar (B) *</label>
+          <input type="text" class="form-input" id="order-titik-b" placeholder="Jakarta">
+        </div>
+        <div class="form-group">
           <label class="form-label">Jenis Barang</label>
           <input type="text" class="form-input" id="order-barang" placeholder="Elektronik">
         </div>
+      </div>
+      <div class="form-row">
         <div class="form-group">
           <label class="form-label">Assign Driver</label>
           <select class="form-select" id="order-driver">
             <option value="">Pilih Driver</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nilai Tagihan</label>
+          <input type="number" class="form-input" id="order-tagihan" placeholder="5000000">
         </div>
       </div>
       
@@ -870,11 +880,6 @@ tr:hover td {
           <label class="form-label">Total Uang Jalan</label>
           <input type="number" class="form-input" id="uj-total" placeholder="1500000">
         </div>
-      </div>
-      
-      <div class="form-group" style="margin-top: 1rem;">
-        <label class="form-label">Nilai Tagihan</label>
-        <input type="number" class="form-input" id="order-tagihan" placeholder="5000000">
       </div>
     </div>
     <div class="modal-footer">
@@ -1078,9 +1083,12 @@ async function generateOrderId() {
       nextNum = maxNum + 1;
     }
     document.getElementById('order-id').value = 'ORD-' + String(nextNum).padStart(3, '0');
+    // Set default tanggal muat = hari ini
+    document.getElementById('order-tanggal-muat').value = new Date().toISOString().split('T')[0];
   } catch (error) {
     console.error('Error generating order ID:', error);
     document.getElementById('order-id').value = 'ORD-001';
+    document.getElementById('order-tanggal-muat').value = new Date().toISOString().split('T')[0];
   }
 }
 
@@ -1296,7 +1304,7 @@ async function loadRecentOrders() {
       tbody.innerHTML = result.data.slice(0, 5).map(order => `
         <tr>
           <td><strong>${order.id}</strong></td>
-          <td>${formatDate(order.tanggal)}</td>
+          <td>${order.tanggal_muat ? formatDate(order.tanggal_muat) : formatDate(order.tanggal)}</td>
           <td>${order.customer_nama}</td>
           <td>${order.titik_a} → ${order.titik_b}</td>
           <td>${getStatusBadge(order.status)}</td>
@@ -1340,7 +1348,7 @@ function renderOrdersTable(orders) {
   tbody.innerHTML = orders.map(order => `
     <tr>
       <td><strong>${order.id}</strong></td>
-      <td>${formatDate(order.tanggal)}</td>
+      <td>${order.tanggal_muat ? formatDate(order.tanggal_muat) : formatDate(order.tanggal)}</td>
       <td>${order.customer_nama}</td>
       <td>${order.titik_a} → ${order.titik_b}</td>
       <td>${order.driver_nama || '-'}</td>
@@ -1416,6 +1424,7 @@ async function submitOrder() {
     driver_id: document.getElementById('order-driver').value || null,
     driver_nama: document.getElementById('order-driver').value ? document.getElementById('order-driver').options[document.getElementById('order-driver').selectedIndex].dataset.nama : null,
     total_uang_jalan: parseFloat(document.getElementById('uj-total').value) || 0,
+    tanggal_muat: document.getElementById('order-tanggal-muat').value || null,
     nilai_tagihan: parseFloat(document.getElementById('order-tagihan').value) || 0
   };
   
@@ -1752,6 +1761,10 @@ async function openOrderDetail(orderId) {
             <div class="form-group" style="margin-bottom: 0;">
               <label class="form-label">Tanggal Order</label>
               <div>${formatDate(order.tanggal)}</div>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Tanggal Muat</label>
+              <div>${order.tanggal_muat ? formatDate(order.tanggal_muat) : '-'}</div>
             </div>
           </div>
         </div>

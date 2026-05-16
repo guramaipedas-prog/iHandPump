@@ -187,7 +187,7 @@ class DatabaseD1 {
   async createOrder({
     id, customer_id, customer_nama, titik_a, titik_b, jenis_barang,
     driver_id, driver_nama, jarak_km, konsumsi_bbm, harga_bbm,
-    biaya_tol, biaya_makan, total_uang_jalan, nilai_tagihan, lat_a, lng_a, lat, lng, nopol_truck
+    biaya_tol, biaya_makan, total_uang_jalan, nilai_tagihan, tanggal_muat, lat_a, lng_a, lat, lng, nopol_truck
   }) {
     // Use provided total_uang_jalan if available, otherwise calculate
     let totalUangJalan = total_uang_jalan;
@@ -200,14 +200,14 @@ class DatabaseD1 {
       INSERT INTO orders (
         id, customer_id, customer_nama, titik_a, titik_b, jenis_barang,
         driver_id, driver_nama, status, jarak_km, konsumsi_bbm, harga_bbm,
-        biaya_tol, biaya_makan, total_uang_jalan, nilai_tagihan,
+        biaya_tol, biaya_makan, total_uang_jalan, nilai_tagihan, tanggal_muat,
         lat_a, lng_a, lat, lng, lokasi_terakhir, nopol_truck
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       id.toUpperCase(), customer_id || null, customer_nama, titik_a, titik_b, jenis_barang || '',
       driver_id || null, driver_nama || '', driver_id ? 'DIJADWALKAN' : 'MENUNGGU',
       jarak_km || 0, konsumsi_bbm || 5, harga_bbm || 10000, biaya_tol || 0, biaya_makan || 0,
-      totalUangJalan, nilai_tagihan || 0,
+      totalUangJalan, nilai_tagihan || 0, tanggal_muat || null,
       lat_a ?? -7.2575, lng_a ?? 112.7521, lat ?? -7.2575, lng ?? 112.7521, titik_b, nopol_truck || ''
     ]);
 
