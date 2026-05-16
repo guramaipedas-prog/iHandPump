@@ -87,6 +87,42 @@ app.get('/api', (c) => {
   });
 });
 
+// Frontend-compatible endpoints (MUST be before route mounts)
+app.get('/api/orders/stats/dashboard', async (c) => {
+  try {
+    const { month, year } = c.req.query();
+    const stats = await c.env.db.getDashboardStats({
+      month: month ? parseInt(month) : null,
+      year: year ? parseInt(year) : null
+    });
+    return c.json({ success: true, data: stats });
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    return c.json({ success: false, error: 'Gagal mengambil statistik dashboard' }, 500);
+  }
+});
+
+app.get('/api/orders/available-periods', async (c) => {
+  try {
+    const periods = await c.env.db.getAvailablePeriods();
+    return c.json({ success: true, data: periods });
+  } catch (error) {
+    console.error('Error fetching periods:', error);
+    return c.json({ success: false, error: 'Gagal mengambil periode' }, 500);
+  }
+});
+
+app.get('/api/orders/recent/list', async (c) => {
+  try {
+    const { limit } = c.req.query();
+    const orders = await c.env.db.getRecentOrders(limit ? parseInt(limit) : 10);
+    return c.json({ success: true, data: orders });
+  } catch (error) {
+    console.error('Error fetching recent orders:', error);
+    return c.json({ success: false, error: 'Gagal mengambil order terbaru' }, 500);
+  }
+});
+
 // Mount routes
 app.route('/api/customers', customers);
 app.route('/api/drivers', drivers);
@@ -111,21 +147,6 @@ app.get('/api/dashboard/stats', async (c) => {
   }
 });
 
-// Frontend-compatible endpoints
-app.get('/api/orders/stats/dashboard', async (c) => {
-  try {
-    const { month, year } = c.req.query();
-    const stats = await c.env.db.getDashboardStats({
-      month: month ? parseInt(month) : null,
-      year: year ? parseInt(year) : null
-    });
-    return c.json({ success: true, data: stats });
-  } catch (error) {
-    console.error('Error fetching dashboard stats:', error);
-    return c.json({ success: false, error: 'Gagal mengambil statistik dashboard' }, 500);
-  }
-});
-
 app.get('/api/dashboard/periods', async (c) => {
   try {
     const periods = await c.env.db.getAvailablePeriods();
@@ -136,28 +157,7 @@ app.get('/api/dashboard/periods', async (c) => {
   }
 });
 
-app.get('/api/orders/available-periods', async (c) => {
-  try {
-    const periods = await c.env.db.getAvailablePeriods();
-    return c.json({ success: true, data: periods });
-  } catch (error) {
-    console.error('Error fetching periods:', error);
-    return c.json({ success: false, error: 'Gagal mengambil periode' }, 500);
-  }
-});
-
 app.get('/api/dashboard/recent-orders', async (c) => {
-  try {
-    const { limit } = c.req.query();
-    const orders = await c.env.db.getRecentOrders(limit ? parseInt(limit) : 10);
-    return c.json({ success: true, data: orders });
-  } catch (error) {
-    console.error('Error fetching recent orders:', error);
-    return c.json({ success: false, error: 'Gagal mengambil order terbaru' }, 500);
-  }
-});
-
-app.get('/api/orders/recent/list', async (c) => {
   try {
     const { limit } = c.req.query();
     const orders = await c.env.db.getRecentOrders(limit ? parseInt(limit) : 10);
