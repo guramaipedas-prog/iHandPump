@@ -96,8 +96,23 @@ app.route('/api/uang-jalan', uangJalan);
 app.route('/api/shipments', tracking);
 app.route('/api/track', tracking);
 
-// Dashboard stats
+// Dashboard stats (legacy compatibility)
 app.get('/api/dashboard/stats', async (c) => {
+  try {
+    const { month, year } = c.req.query();
+    const stats = await c.env.db.getDashboardStats({
+      month: month ? parseInt(month) : null,
+      year: year ? parseInt(year) : null
+    });
+    return c.json({ success: true, data: stats });
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    return c.json({ success: false, error: 'Gagal mengambil statistik dashboard' }, 500);
+  }
+});
+
+// Frontend-compatible endpoints
+app.get('/api/orders/stats/dashboard', async (c) => {
   try {
     const { month, year } = c.req.query();
     const stats = await c.env.db.getDashboardStats({
@@ -121,6 +136,16 @@ app.get('/api/dashboard/periods', async (c) => {
   }
 });
 
+app.get('/api/orders/available-periods', async (c) => {
+  try {
+    const periods = await c.env.db.getAvailablePeriods();
+    return c.json({ success: true, data: periods });
+  } catch (error) {
+    console.error('Error fetching periods:', error);
+    return c.json({ success: false, error: 'Gagal mengambil periode' }, 500);
+  }
+});
+
 app.get('/api/dashboard/recent-orders', async (c) => {
   try {
     const { limit } = c.req.query();
@@ -129,6 +154,51 @@ app.get('/api/dashboard/recent-orders', async (c) => {
   } catch (error) {
     console.error('Error fetching recent orders:', error);
     return c.json({ success: false, error: 'Gagal mengambil order terbaru' }, 500);
+  }
+});
+
+app.get('/api/orders/recent/list', async (c) => {
+  try {
+    const { limit } = c.req.query();
+    const orders = await c.env.db.getRecentOrders(limit ? parseInt(limit) : 10);
+    return c.json({ success: true, data: orders });
+  } catch (error) {
+    console.error('Error fetching recent orders:', error);
+    return c.json({ success: false, error: 'Gagal mengambil order terbaru' }, 500);
+  }
+});
+
+// Billing stats summary (frontend compatibility)
+app.get('/api/billing/stats/summary', async (c) => {
+  try {
+    const { month, year } = c.req.query();
+    const stats = await c.env.db.getBillingStats({
+      month: month ? parseInt(month) : null,
+      year: year ? parseInt(year) : null
+    });
+    return c.json({ success: true, data: stats });
+  } catch (error) {
+    console.error('Error fetching billing stats:', error);
+    return c.json({ success: false, error: 'Gagal mengambil statistik tagihan' }, 500);
+  }
+});
+
+// Update fuel price (frontend compatibility)
+app.put('/api/uang-jalan/fuel-prices/:jenis', async (c) => {
+  try {
+    const jenis = c.req.param('jenis');
+    const body = await c.req.json();
+    const { harga } = body;
+
+    if (!harga) {
+      return c.json({ success: false, error: 'Harga wajib diisi' }, 400);
+    }
+
+    const updated = await c.env.db.updateFuelPrice(jenis, harga);
+    return c.json({ success: true, message: 'Harga BBM berhasil diupdate', data: updated });
+  } catch (error) {
+    console.error('Error updating fuel price:', error);
+    return c.json({ success: false, error: 'Gagal mengupdate harga BBM' }, 500);
   }
 });
 
