@@ -182,10 +182,14 @@ class DatabaseD1 {
   async createOrder({
     id, customer_id, customer_nama, titik_a, titik_b, jenis_barang,
     driver_id, driver_nama, jarak_km, konsumsi_bbm, harga_bbm,
-    biaya_tol, biaya_makan, nilai_tagihan, lat_a, lng_a, lat, lng, nopol_truck
+    biaya_tol, biaya_makan, total_uang_jalan, nilai_tagihan, lat_a, lng_a, lat, lng, nopol_truck
   }) {
-    const bbmNeeded = jarak_km / (konsumsi_bbm || 5);
-    const totalUangJalan = (bbmNeeded * (harga_bbm || 10000)) + (biaya_tol || 0) + (biaya_makan || 0);
+    // Use provided total_uang_jalan if available, otherwise calculate
+    let totalUangJalan = total_uang_jalan;
+    if (totalUangJalan === undefined || totalUangJalan === null) {
+      const bbmNeeded = (jarak_km || 0) / (konsumsi_bbm || 5);
+      totalUangJalan = (bbmNeeded * (harga_bbm || 10000)) + (biaya_tol || 0) + (biaya_makan || 0);
+    }
 
     await this.run(`
       INSERT INTO orders (

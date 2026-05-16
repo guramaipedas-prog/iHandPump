@@ -77,7 +77,7 @@ app.post('/', async (c) => {
     const {
       id, customer_id, customer_nama, titik_a, titik_b, jenis_barang,
       driver_id, driver_nama, jarak_km, konsumsi_bbm, harga_bbm,
-      biaya_tol, biaya_makan, nilai_tagihan, lat_a, lng_a, lat, lng, nopol_truck
+      biaya_tol, biaya_makan, total_uang_jalan, nilai_tagihan, lat_a, lng_a, lat, lng, nopol_truck
     } = body;
 
     if (!id || !customer_nama || !titik_a || !titik_b) {
@@ -87,7 +87,7 @@ app.post('/', async (c) => {
     const newOrder = await c.env.db.createOrder({
       id, customer_id, customer_nama, titik_a, titik_b, jenis_barang,
       driver_id, driver_nama, jarak_km, konsumsi_bbm, harga_bbm,
-      biaya_tol, biaya_makan, nilai_tagihan, lat_a, lng_a, lat, lng, nopol_truck
+      biaya_tol, biaya_makan, total_uang_jalan, nilai_tagihan, lat_a, lng_a, lat, lng, nopol_truck
     });
 
     return c.json({ success: true, message: 'Order berhasil dibuat', data: newOrder }, 201);

@@ -864,25 +864,10 @@ tr:hover td {
       
       <hr style="border: none; border-top: 1px solid var(--border); margin: 1.5rem 0;">
       
-      <h4 style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--muted);">💰 Perhitungan Uang Jalan</h4>
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Jarak (km)</label>
-          <input type="number" class="form-input" id="uj-jarak" placeholder="800" onchange="calculateUangJalan()">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Konsumsi BBM (km/liter)</label>
-          <input type="number" class="form-input" id="uj-konsumsi" placeholder="5" value="5" onchange="calculateUangJalan()">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Harga BBM/liter</label>
-          <input type="number" class="form-input" id="uj-harga" placeholder="10000" value="10000" onchange="calculateUangJalan()">
-        </div>
         <div class="form-group">
           <label class="form-label">Total Uang Jalan</label>
-          <input type="text" class="form-input" id="uj-total" readonly style="background: rgba(255,90,0,0.1); color: var(--primary); font-weight: 600;">
+          <input type="number" class="form-input" id="uj-total" placeholder="1500000">
         </div>
       </div>
       
@@ -1400,15 +1385,8 @@ async function loadCustomerOptions() {
 }
 
 function calculateUangJalan() {
-  const jarak = parseFloat(document.getElementById('uj-jarak').value) || 0;
-  const konsumsi = parseFloat(document.getElementById('uj-konsumsi').value) || 5;
-  const harga = parseFloat(document.getElementById('uj-harga').value) || 10000;
-  
-  const bbmNeeded = jarak / konsumsi;
-  const total = bbmNeeded * harga;
-  
-  document.getElementById('uj-total').value = formatRupiah(total);
-  return total;
+  // Total uang jalan diinput manual oleh user
+  return parseFloat(document.getElementById('uj-total').value) || 0;
 }
 
 async function submitOrder() {
@@ -1421,9 +1399,7 @@ async function submitOrder() {
     jenis_barang: document.getElementById('order-barang').value,
     driver_id: document.getElementById('order-driver').value || null,
     driver_nama: document.getElementById('order-driver').value ? document.getElementById('order-driver').options[document.getElementById('order-driver').selectedIndex].dataset.nama : null,
-    jarak_km: parseFloat(document.getElementById('uj-jarak').value) || 0,
-    konsumsi_bbm: parseFloat(document.getElementById('uj-konsumsi').value) || 5,
-    harga_bbm: parseFloat(document.getElementById('uj-harga').value) || 10000,
+    total_uang_jalan: parseFloat(document.getElementById('uj-total').value) || 0,
     nilai_tagihan: parseFloat(document.getElementById('order-tagihan').value) || 0
   };
   
